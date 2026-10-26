@@ -3,36 +3,119 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>КРУ-помощник</title>
+
+    <!-- 
+      1. АДАПТАЦИЯ ПОД МОБИЛЬНЫЕ УСТРОЙСТВА:
+      - width=device-width: ширина области просмотра равна ширине экрана устройства.
+      - initial-scale=1.0: начальный масштаб 1:1 (без отдаления).
+      - maximum-scale=1.0, user-scalable=no: запрет масштабирования щипком (pinch-to-zoom),
+        чтобы при нажатиях и перетаскивании деталей экран не зумился случайно.
+      - viewport-fit=cover: растягивает интерфейс на весь экран, включая зоны под вырезами
+        (челка/Dynamic Island на iPhone) и жестовой полосой внизу.
+    -->
+    <meta name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+
+    <!-- Цвет строки состояния браузера на смартфонах (Safari / Chrome Mobile) -->
+    <meta name="theme-color" content="#1f2421">
+
+    <title>КРУ Etalon</title>
 
     <style>
+        /* 
+          2. БАЗОВЫЙ СБРОС (RESET):
+          box-sizing: border-box — размеры элементов включают padding и border.
+          -webkit-tap-highlight-color: transparent — убирает серый/синий квадрат подсветки
+          при клике/тапе на мобильных экранах (делает интерфейс похожим на нативное приложение).
+          user-select: none — отключает случайное выделение текста синей рамкой при долгом нажатии.
+        */
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        /* 
+          3. ПОЛНОЭКРАННОЕ ОКНО БЕЗ ПРОКРУТКИ:
+          100dvh (Dynamic Viewport Height) — ключевое свойство для мобилок. В отличие от 100vh, 
+          оно динамически учитывает скрытие и появление адресной строки в мобильных браузерах.
+          overflow: hidden — гарантирует жесткий запрет скролла (окно стоит как влитое).
+          touch-action: none — блокирует системные жесты браузера (тягу страницы вниз для обновления).
+        */
+        html,
         body {
             margin: 0;
-            background: #cfcfcf;
-            min-height: 100vh;
-            /* ← изменено: не фиксированная высота, а минимум весь экран */
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            overflow: hidden;
+            background: #1f2421;
+            /* Внешний темный фон (виден на ПК по бокам контейнера) */
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: none;
+        }
+
+       /* 
+          4. МОБИЛЬНЫЙ КОНТЕЙНЕР (РАБОЧАЯ ОБЛАСТЬ):
+          - aspect-ratio: удерживает пропорции телефона 1:2 при любом зуме на ПК.
+          - width / height: масштабируются синхронно до предельной границы окна (meet).
+          - container-type: size: позволяет кнопкам масштабироваться от размера контейнера.
+        */
+        #app {
+            aspect-ratio: 440 / 880;
+            width: min(440px, calc(100dvh * (440 / 880)));
+            height: min(880px, 100dvh, calc(100vw * (880 / 440)));
+            max-width: 100vw;
+            max-height: 100dvh;
+            background: #e6dccb;
+            box-shadow: 0 0 35px rgba(0, 0, 0, 0.6);
+            position: relative;
             display: flex;
             flex-direction: column;
-            /* ← важно: чтобы margin: auto работал вертикально */
+            overflow: hidden;
+            container-type: size; /* Для синхронного масштабирования HTML-кнопок */
+        }
+
+        /* 
+          5. КОНТЕЙНЕР ДЛЯ MMI (ВЕРХНЯЯ ТРЕТЬ ЭКРАНА):
+          height: 33% — занимает ровно треть высоты смартфона.
+          display: flex — центрирует SVG-панель внутри своей области.
+        */
+        .mmi-section {
+            width: 100%;
+            height: 50%;
+            flex: 0 0 50%; /* Запрещает секции сжиматься в пользу кнопок */
+            display: flex;
             justify-content: center;
-            /* ← можно оставить для горизонтального центрирования, если нужно */
             align-items: center;
-            font-family: Arial, sans-serif;
+            padding: 4px 6px;
+            position: relative;
+            z-index: 10;
         }
 
-        svg {
-            background: #e6dccb;
-            border: 3px solid #888;
-            border-radius: 6px;
-            margin: auto;
-            /* центрирует по горизонтали, но НЕ вертикально */
+        .bottom-section {
+            width: 100%;
+            height: 50%;
+            flex: 0 0 50%; /* Строго держит вторую половину */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
         }
 
-
-
+        /* 
+          6. СТИЛИ ЭЛЕМЕНТОВ MMI (ИЗ ОРИГИНАЛЬНОГО ФАЙЛА):
+        */
         .mmi-panel {
             fill: rgb(0, 104, 83);
-            stroke: #fff;
+            stroke: #ffffff;
             stroke-width: 4;
             rx: 16;
             ry: 16;
@@ -40,101 +123,22 @@
 
         .mmi-border {
             fill: #fff0;
-            stroke: #fff;
+            stroke: #ffffff;
             stroke-width: 1;
             rx: 8;
             ry: 8;
         }
 
         .display-panel {
-            fill: #000;
+            fill: #000000;
             rx: 4;
             ry: 4;
-        }
-
-        .panel {
-            fill: #f2f2f2;
-            stroke: #999;
-            stroke-width: 2;
-        }
-
-        .down-panel {
-            fill: rgba(0, 104, 83, 0.205);
-            stroke: #999;
-            stroke-width: 2;
-        }
-
-        .scheme-line {
-            stroke: #222;
-            stroke-width: 6;
-            fill: none;
-
-            stroke-linecap: round;
-            /* скругление концов */
-            stroke-linejoin: round;
-            /* скругление углов */
-        }
-
-        .arrow {
-            fill: #fff;
-            stroke: #f00;
-            stroke-width: 2;
-        }
-
-        .mangen-connector {
-            fill: #bbb;
-            stroke: #000;
-            stroke-width: 1;
-            rx: 4;
-            ry: 4;
-        }
-
-        .thin {
-            stroke-width: 2;
-        }
-
-        .text {
-            font-size: 12px;
-            fill: #222;
-        }
-
-        .text-selector {
-            font-size: 10px;
-        }
-
-        .text-small {
-            font-size: 8px;
-            fill: #333;
-        }
-
-        .text-legend {
-            font-size: 12px;
-            fill: #222;
-        }
-
-        .text-group {
-            font-size: 16px;
-            font-weight: bold;
-            fill: #444;
-        }
-
-        .text-scenario {
-            font-size: 16px;
-            font-weight: bold;
-            font-style: italic;
-            fill: #000;
-        }
-
-        .text-notification {
-            font-size: 14px;
-            font-weight: bold;
-            fill: #000;
         }
 
         .text-mmi-display {
             font-size: 12px;
             font-weight: bold;
-            fill: #0d0;
+            fill: #00dd00;
         }
 
         .data-mmi-display {
@@ -142,42 +146,7 @@
             font-weight: bold;
             text-anchor: middle;
             dominant-baseline: middle;
-            fill: #0d0;
-        }
-
-        .text-mmi-on-off {
-            font-size: 6px;
-            fill: #fff;
-        }
-
-        .text-mmi-button {
-            font-size: 8px;
-            font-weight: bold;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            fill: #000;
-        }
-
-        .text-mangen-black {
-            font-size: 7px;
-            font-weight: bold;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            fill: #000;
-        }
-
-        .text-mangen-white {
-            font-size: 7px;
-            font-weight: bold;
-            text-anchor: middle;
-            dominant-baseline: middle;
-            fill: #fff;
-        }
-
-        .text-mmi-number-button {
-            font-size: 10px;
-            font-weight: bold;
-            fill: #00f;
+            fill: #00dd00;
         }
 
         .text-mmi-border {
@@ -185,72 +154,34 @@
             font-weight: bold;
             text-anchor: middle;
             dominant-baseline: middle;
-            fill: #fff;
+            fill: #ffffff;
         }
 
-        .handle {
-            fill: #9e9e9e;
-            stroke: #555;
-            stroke-width: 2;
+        .text-mmi-on-off {
+            font-size: 6px;
+            fill: #ffffff;
         }
 
-        .metal {
-            fill: #aaa;
-            stroke: #7a5c2e;
-            stroke-width: 2;
-        }
-
-        .selector_point {
-            fill: #f00;
-            stroke: #f00;
-        }
-
-        /* Кнопка включения */
+        /* Кнопка включения ВВ (I) */
         .button-on {
             fill: #c62828;
-            stroke: #fff;
+            stroke: #ffffff;
             stroke-width: 2;
             rx: 8;
             cursor: pointer;
         }
 
-        /* Кнопка выключения */
+        /* Кнопка отключения ВВ (O) */
         .button-off {
             fill: #2e7d32;
-            stroke: #fff;
+            stroke: #ffffff;
             stroke-width: 2;
             rx: 8;
             cursor: pointer;
-        }
-
-        /* Кнопка операции */
-        .button-operation {
-            fill: #6bbd199f;
-            stroke: #222;
-            stroke-width: 2;
-            rx: 8;
-            cursor: pointer;
-        }
-
-        /* Кнопка сценария */
-        .button-scenario {
-            fill: rgba(0, 104, 83, 0.6);
-            stroke: #222;
-            stroke-width: 2;
-            rx: 8;
-            cursor: pointer;
-        }
-
-        .button-mmi {
-            fill: #ddd;
-            stroke: #000;
-            stroke-width: 1;
-            rx: 4;
-            ry: 4;
         }
 
         .button-text {
-            fill: #fff;
+            fill: #ffffff;
             font-size: 13px;
             font-weight: bold;
             text-anchor: middle;
@@ -258,2458 +189,746 @@
             pointer-events: none;
         }
 
-        /* Текст навигации */
-        .nav-text {
-            fill: #fff;
-            font-size: 13px;
+        .indicator-led {
+            stroke: #222222;
+            stroke-width: 1;
+        }
+
+        /* Серые сервисные кнопки MMI */
+        .button-mmi {
+            fill: #dddddd;
+            stroke: #000000;
+            stroke-width: 1;
+            rx: 4;
+            ry: 4;
+            cursor: pointer;
+        }
+
+        /* Плавная анимация нажатия кнопки MMI */
+        .button-on,
+        .button-off,
+        .button-mmi {
+            transition: opacity 0.2s ease;
+        }
+
+        .button-on:active,
+        .button-off:active,
+        .button-mmi:active {
+            opacity: 0.3;
+            /* степень прозрачности в момент касания */
+        }
+
+        .text-mmi-button {
+            font-size: 8px;
             font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            fill: #000000;
             pointer-events: none;
         }
 
-        .indicator-led {
-            stroke: #222;
+        .text-mmi-number-button {
+            font-size: 10px;
+            font-weight: bold;
+            fill: #0000ff;
+            pointer-events: none;
+        }
+
+        /* Разъем ручного генератора */
+        .mangen-connector {
+            fill: #bbb;
+            stroke: #000;
             stroke-width: 1;
+            rx: 4;
+            ry: 4;
+        }
+        /* Текст таблички ручного генератора */
+        .text-mangen-black {
+            font-size: 7px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            fill: #000000;
+        }
+
+        .text-mangen-white {
+            font-size: 7px;
+            font-weight: bold;
+            text-anchor: middle;
+            dominant-baseline: middle;
+            fill: #ffffff;
+        }
+
+        /* Аккуратный размер надписи внутри рамки разъема */
+        #generatorHarting .text {
+            font-size: 9.5px;
+        }
+
+        /* 
+          7. НИЖНЯЯ ПОЛОВИНА ЭКРАНА:
+          height: 50% — занимает ровно нижнюю половину экрана.
+          justify-content: space-between — мнемосхема прижата к верху,
+          а блок для трёх будущих кнопок автоматически прижат к низу.
+        */
+        .bottom-section {
+            width: 100%;
+            height: 50%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .scheme-wrapper {
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            overflow: hidden;
+            /* Прижимает мнемосхему к верху нижней половины */
+        }
+
+        .scheme-wrapper svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* 
+          9. НИЖНЯЯ ПАНЕЛЬ И КНОПКИ НАВИГАЦИИ:
+          margin-top: auto — гарантированно прижимает блок к самому низу экрана.
+        */
+        .bottom-nav-container {
+            width: 100%;
+            padding: 0 10px 10px 10px;
+            /* Отступы по бокам и снизу экрана */
+            margin-top: auto;
+        }
+
+        /* 
+          Обновленный стиль нижней навигации (полупрозрачный)
+        */
+        .bottom-nav-card {
+            width: 100%;
+            background: rgba(255, 255, 255, 0.88); /* Полупрозрачный фон */
+            backdrop-filter: blur(8px);            /* Эффект матового стекла */
+            -webkit-backdrop-filter: blur(8px);
+            border: 2px solid #9ca3af;
+            border-radius: 14px;
+            padding: 6px;
+            display: flex;
+            gap: 8px;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        /* 
+          ВСПЛЫВАЮЩИЕ ПАНЕЛИ РАЗДЕЛОВ:
+          - position: absolute + bottom: 0: прижаты к нижней границе экрана.
+          - transform: translateY(120%): по умолчанию спрятаны вниз за экран.
+          - pointer-events: none: чтобы в скрытом состоянии не перехватывали нажатия.
+        */
+        .menu-drawer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 0 10px 10px 10px; /* Такие же отступы, как у bottom-nav-container */
+            z-index: 50;
+            transform: translateY(120%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.3, 1);
+            pointer-events: none;
+        }
+
+        /* Класс для показа панели (будем добавлять через JS) */
+        .menu-drawer.open {
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        /* Карточка панели — высота адаптируется под любое количество кнопок */
+        .menu-drawer-card {
+            width: 100%;
+            height: auto; /* Высота строго по содержимому */
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 2px solid #9ca3af;
+            border-radius: 14px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column; /* Кнопки строго в один столбец */
+            gap: 6px;               /* Отступ между кнопками */
+            box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Кнопки внутри всплывающих панелей */
+        .drawer-btn {
+            width: 100%;
+            min-height: clamp(28px, 4.3cqh, 38px);
+            padding: 4px 8px;
+            border: 1px solid #4b4b4b;
+            border-radius: 8px;
+            font-size: clamp(9px, 2.7cqw, 12px);
+            font-weight: bold;
+            background: #ffffff;
+            color: #1f2421;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .drawer-btn:active {
+            opacity: 0.5;
+            background: #f3f4f6;
+            transform: scale(0.98);
+        }
+
+        /* Кнопка "Скрыть" (акцентная для быстрого закрытия) */
+        .drawer-btn-close {
+            background: #fee2e2;
+            color: #991b1b;
+            border-color: #4b4b4b;
+            margin-top: 2px;
+        }
+
+        .drawer-btn-close:active {
+            background: #fecaca;
+        }
+
+        /* Кнопки вкладок внутри рамки */
+        .nav-btn {
+            flex: 1;
+            height: clamp(30px, 5cqh, 44px); /* Масштабируется по высоте экрана */
+            border: 1px solid transparent;
+            border-radius: 9px;
+            font-size: clamp(9px, 2.7cqw, 12px); /* Масштабируется по ширине экрана */
+            font-weight: bold;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: #006853;
+            color: #ffffff;
+            border-color: #004d3d;
+        }
+
+
+        /* Эффект нажатия на телефоне */
+        .nav-btn:active {
+            transform: scale(0.97);
+            filter: brightness(0.95);
+        }
+
+        /* 
+          8. СТИЛИ ЭЛЕМЕНТОВ МНЕМОСХЕМЫ:
+        */
+        /* Белая картичка-подложка для мнемосхемы */
+        .scheme-card-bg {
+            fill: #fff;
+            stroke: #9ca3af;
+            stroke-width: 2;
+            rx: 14;
+            ry: 14;
+        }
+
+        .scheme-line {
+            stroke: #222222;
+            stroke-width: 6;
+            fill: none;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .arrow {
+            fill: #ffffff;
+            stroke: #ff0000;
+            stroke-width: 2;
+        }
+
+        .text {
+            font-size: 12px;
+            fill: #222222;
+            font-weight: bold;
+        }
+
+        .text-selector {
+            font-size: 10px;
+            font-weight: bold;
+        }
+
+        .text-small {
+            font-size: 8px;
+            fill: #333333;
+            font-weight: bold;
+        }
+
+        .metal {
+            fill: #aaaaaa;
+            stroke: #7a5c2e;
+            stroke-width: 2;
+        }
+
+        .selector_point {
+            fill: #ff0000;
+            stroke: #ff0000;
         }
 
         .movable {
             transition: transform 0.8s ease-in-out;
-        }
-
-        /* Разрешенная операция */
-        .operation-allowed {
-            fill: #6bbd19;
-            /* LawnGreen */
-            stroke: #000000;
-            rx: 8;
-            stroke-width: 2;
-        }
-
-        /* Запрещенная операция */
-        .operation-blocked {
-            fill: #e02828;
-            /* бледно-красный */
-            stroke: #000000;
-            rx: 8;
-            stroke-width: 2;
-            position: relative;
-            /* или absolute/fixed — зависит от контекста; важно для z-index */
-            z-index: 9999;
-            /* достаточно высокое значение, чтобы быть поверх большинства элементов */
-            opacity: 0.2;
-            pointer-events: none;
-        }
-
-        .scenario-back {
-            fill: #fff9;
-            stroke: #777;
-            stroke-width: 2;
-            rx: 8;
-        }
-
-        .notification-back {
-            fill: #fffa;
-            rx: 8;
-        }
-
-        /* Запрещенная операция без визуального скрытия */
-        .operation-blocked-without-visual {
-            pointer-events: none;
         }
     </style>
 </head>
 
 <body>
 
-    <svg width="800" height="900">
-
-        <!-- Верхняя ниша (механизм) -->
-        <rect x="20" y="470" width="460" height="120" fill="#999" rx="10" />
-
-        <!-- Основная панель -->
-        <rect id="panel" x="20" y="590" width="460" height="260" rx="15" class="panel" />
-
-        <!-- Панель с кнопками команд-->
-        <rect x="520" y="340" width="260" height="280" rx="15" class="down-panel" />
-
-        <!-- Панель с кнопками сценариев-->
-        <rect x="520" y="50" width="260" height="220" rx="15" class="down-panel" />
-
-        <!-- Панель MMI-->
-        <g id="mmiPanel" transform="translate(0, 0)">
-            <rect x="20" y="20" width="460" height="350" class="mmi-panel" />
-            <rect x="50" y="40" width="400" height="90" class="display-panel" />
-            // Горизонтальные линии на панели MMI
-            <g id="mmi-line">
-                <line x1="55" y1="57" x2="445" y2="57" stroke="#0c0" stroke-width="2" />
-                <line x1="55" y1="115" x2="445" y2="115" stroke="#0c0" stroke-width="2" />
-            </g>
-            <text id="mmi-display-first-line-text" x="55" y="52" class="text-mmi-display"></text>
-            <text id="mmi-display-text" x="55" y="70" class="text-mmi-display"></text>
-            <text id="mmi-display-date" x="250" y="124" class="data-mmi-display"></text>
-            <rect x="50" y="160" width="190" height="90" class="mmi-border" />
-            <rect x="255" y="160" width="205" height="45" class="mmi-border" />
-
-            <text x="145" y="155" class="text-mmi-border">УПРАВЛЕНИЕ ВВ</text>
-            <text x="357" y="155" class="text-mmi-border">ПРОСМОТР ЖУРНАЛОВ</text>
-
-
-            <text x="95" y="185" class="text-mmi-on-off">ВКЛЮЧЕНО</text>
-            <text x="170" y="185" class="text-mmi-on-off">ОТКЛЮЧЕНО</text>
-
-            <!-- Кнопка ВКЛ -->
-            <g onclick="tryOperation(1)" style="cursor:pointer;">
-                <rect id="op1" x="85" y="190" width="40" height="40" class="button-on" />
-                <text x="105" y="210" class="button-text">I</text>
-            </g>
-
-            <!-- Индикатор ВКЛ -->
-            <circle id="indicatorOn" cx="90" cy="183" r="3" fill="#fff" class="indicator-led" />
-
-            <!-- Кнопка ОТКЛ -->
-            <g onclick="tryOperation(2)" style="cursor:pointer;">
-                <rect id="op2" x="165" y="190" width="40" height="40" class="button-off" />
-                <text x="185" y="210" class="button-text">O</text>
-            </g>
-
-            <!-- Индикатор ОТКЛ -->
-            <circle id="indicatorOff" cx="165" cy="183" r="3" fill="#f00" class="indicator-led" />
-
-            <!-- Кнопки навигации MMI -->
-            <g style="cursor:pointer;">
-                <rect x="50" y="265" width="55" height="30" class="button-mmi" />
-                <text x="77" y="280" class="text-mmi-button">ОТМЕНА</text>
-
-                <rect x="115" y="265" width="55" height="30" class="button-mmi" />
-                <text x="142" y="280" class="text-mmi-button">▲</text>
-
-                <rect x="180" y="265" width="55" height="30" class="button-mmi" />
-                <text x="207" y="280" class="text-mmi-button">ВВОД</text>
-
-                <rect x="50" y="310" width="55" height="30" class="button-mmi" />
-                <text x="77" y="325" class="text-mmi-button">◄</text>
-
-                <rect x="115" y="310" width="55" height="30" class="button-mmi" />
-                <text x="142" y="325" class="text-mmi-button">▼</text>
-
-                <rect x="180" y="310" width="55" height="30" class="button-mmi" />
-                <text x="207" y="325" class="text-mmi-button">►</text>
-            </g>
-
-            <!-- Кнопки журналов MMI -->
-            <g style="cursor:pointer;">
-                <rect x="265" y="170" width="55" height="30" class="button-mmi" />
-                <text x="292" y="185" class="text-mmi-button">СОБЫТИЯ</text>
-                <text x="270" y="180" class="text-mmi-number-button">1</text>
-
-                <rect id="malfunButton" x="330" y="170" width="55" height="30" class="button-mmi" />
-                <text x="360" y="180" class="text-mmi-button">
-                    <tspan x="360" dy="0">НЕИСПР.</tspan>
-                    <tspan x="360" dy="1.2em">ПРЕДУПР.</tspan>
-                </text>
-                <text x="335" y="180" class="text-mmi-number-button">2</text>
-
-                <rect id="measButton" x="395" y="170" width="55" height="30" class="button-mmi" />
-                <text x="422" y="185" class="text-mmi-button">ИЗМЕРЕНИЯ</text>
-                <text x="400" y="180" class="text-mmi-number-button">3</text>
-            </g>
-
-            <!-- Кнопки РЗА MMI -->
-            <g style="cursor:pointer;">
-                <rect x="265" y="220" width="55" height="30" class="button-mmi" />
-                <text x="292" y="235" class="text-mmi-button">АПВ</text>
-                <text x="270" y="230" class="text-mmi-number-button">4</text>
-
-                <rect x="330" y="220" width="55" height="30" class="button-mmi" />
-                <text x="357" y="235" class="text-mmi-button">АВР</text>
-                <text x="335" y="230" class="text-mmi-number-button">5</text>
-
-                <rect x="395" y="220" width="55" height="30" class="button-mmi" />
-                <text x="422" y="235" class="text-mmi-button">ОЗЗ</text>
-                <text x="400" y="230" class="text-mmi-number-button">6</text>
-
-                <rect x="265" y="265" width="55" height="30" class="button-mmi" />
-                <text x="292" y="280" class="text-mmi-button">ЗЗЗ</text>
-                <text x="270" y="275" class="text-mmi-number-button">7</text>
-
-                <rect x="330" y="265" width="55" height="30" class="button-mmi" />
-                <text x="357" y="280" class="text-mmi-button">КВИТ.</text>
-                <text x="335" y="275" class="text-mmi-number-button">8</text>
-
-                <rect x="395" y="265" width="55" height="30" class="button-mmi" />
-                <text x="422" y="280" class="text-mmi-button">ЛЗШ</text>
-                <text x="400" y="275" class="text-mmi-number-button">9</text>
-
-                <rect x="265" y="310" width="55" height="30" class="button-mmi" />
-                <text x="292" y="325" class="text-mmi-button">МЕСТН.</text>
-
-                <rect x="330" y="310" width="55" height="30" class="button-mmi" />
-                <text x="335" y="320" class="text-mmi-number-button">0</text>
-
-                <rect x="395" y="310" width="55" height="30" class="button-mmi" />
-                <text x="422" y="325" class="text-mmi-button">ГРУППА</text>
-                <text x="400" y="320" class="text-mmi-number-button">.</text>
-            </g>
-
-            <!-- Индикаторы -->
-            <g>
-                <!-- Над кнопкой 1 -->
-                <circle cx="270" cy="165" r="3" fill="#fff" class="indicator-led" />
-                <text x="277" y="167" class="text-mmi-on-off">События</text>
-                <!-- Над кнопкой 2 -->
-                <circle cx="335" cy="165" r="3" fill="#fff" class="indicator-led" />
-                <text x="342" y="167" class="text-mmi-on-off">Неисправн.</text>
-                <!-- Над кнопкой 3 -->
-                <circle cx="400" cy="165" r="3" fill="#fff" class="indicator-led" />
-                <!-- Над кнопкой 4 -->
-                <circle cx="270" cy="215" r="3" fill="#f00" class="indicator-led" />
-                <text x="277" y="217" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="295" cy="215" r="3" fill="#fff" class="indicator-led" />
-                <text x="302" y="217" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой 5 -->
-                <circle cx="335" cy="215" r="3" fill="#f00" class="indicator-led" />
-                <text x="342" y="217" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="360" cy="215" r="3" fill="#fff" class="indicator-led" />
-                <text x="367" y="217" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой 6 -->
-                <circle cx="400" cy="215" r="3" fill="#f00" class="indicator-led" />
-                <text x="407" y="217" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="425" cy="215" r="3" fill="#fff" class="indicator-led" />
-                <text x="432" y="217" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой 7 -->
-                <circle cx="270" cy="260" r="3" fill="#f00" class="indicator-led" />
-                <text x="277" y="262" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="295" cy="260" r="3" fill="#fff" class="indicator-led" />
-                <text x="302" y="262" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой 8 -->
-                <circle cx="335" cy="260" r="3" fill="#f00" class="indicator-led" />
-                <text x="342" y="262" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="360" cy="260" r="3" fill="#fff" class="indicator-led" />
-                <text x="367" y="262" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой 9 -->
-                <circle cx="400" cy="260" r="3" fill="#f00" class="indicator-led" />
-                <text x="407" y="262" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="425" cy="260" r="3" fill="#fff" class="indicator-led" />
-                <text x="432" y="262" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой МЕСТН. -->
-                <circle cx="270" cy="305" r="3" fill="#f00" class="indicator-led" />
-                <text x="277" y="307" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="295" cy="305" r="3" fill="#fff" class="indicator-led" />
-                <text x="302" y="307" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой 5 -->
-                <circle cx="335" cy="305" r="3" fill="#f00" class="indicator-led" />
-                <text x="342" y="307" class="text-mmi-on-off">ВКЛ</text>
-                <circle cx="360" cy="305" r="3" fill="#fff" class="indicator-led" />
-                <text x="367" y="307" class="text-mmi-on-off">ОТКЛ</text>
-                <!-- Над кнопкой 6 -->
-                <circle cx="400" cy="305" r="3" fill="#f00" class="indicator-led" />
-                <text x="405" y="307" class="text-mmi-on-off">1</text>
-                <circle cx="413" cy="305" r="3" fill="#fff" class="indicator-led" />
-                <text x="418" y="307" class="text-mmi-on-off">2</text>
-                <circle cx="426" cy="305" r="3" fill="#fff" class="indicator-led" />
-                <text x="431" y="307" class="text-mmi-on-off">3</text>
-                <circle cx="439" cy="305" r="3" fill="#fff" class="indicator-led" />
-                <text x="444" y="307" class="text-mmi-on-off">4</text>
-            </g>
-        </g>
-
-        <!-- СХЕМА -->
-        <g id="scheme" transform="translate(0, 450)">
-
-            <!-- Горизонт -->
-            <line x1="100" y1="180" x2="320" y2="180" class="scheme-line" />
-
-            <!-- Вертикаль -->
-            <line x1="150" y1="180" x2="150" y2="250" class="scheme-line" />
-
-            <!-- Указатель селектора -->
-            <g id="selector_pos">
-                <line x1="100" y1="300" x2="150" y2="300" class="scheme-line" />
-            </g>
-
-            <!-- Круг узла -->
-            <circle cx="150" cy="300" r="8" fill="#222" />
-
-            <!-- Земля -->
-            <line x1="150" y1="350" x2="150" y2="370" class="scheme-line" />
-            <line x1="130" y1="370" x2="170" y2="370" class="scheme-line" />
-            <line x1="138" y1="380" x2="162" y2="380" class="scheme-line" />
-            <line x1="146" y1="390" x2="154" y2="390" class="scheme-line" />
-
-            <!-- Правая часть -->
-            <line x1="150" y1="300" x2="200" y2="300" class="scheme-line" />
-            <line x1="200" y1="300" x2="200" y2="220" class="scheme-line" />
-            <line x1="200" y1="220" x2="270" y2="220" class="scheme-line" />
-            <line x1="270" y1="220" x2="270" y2="250" class="scheme-line" />
-            <polygon points="265,370 275,370 270,390" fill="#222" />
-
-            <!-- Переключатель -->
-            <circle cx="270" cy="270" r="20" fill="none" stroke="#c62828" stroke-width="2" />
-            <line id="switchLine" x1="270" y1="270" x2="282" y2="258" class="scheme-line" />
-            <line x1="270" y1="270" x2="270" y2="370" class="scheme-line" />
-
-        </g>
-
-        <!-- Разъем ручного генератора -->
-        <g id="generator" transform="translate(0, 0)">
-            <rect x="380" y="375" width="80" height="40" fill="none" stroke="#000" stroke-width="1" rx="1" ry="1" />
-
-            <text x="420" y="383" class="text" text-anchor="middle" dominant-baseline="middle">
-                <tspan x="420" dy="0">РАЗЪЕМ</tspan>
-                <tspan x="420" dy="1.05em">для ручного</tspan>
-                <tspan x="420" dy="1.05em">генератора</tspan>
-            </text>
-
-            <rect x="395" y="418" width="50" height="50" class="mangen-connector" />
-            <circle cx="420" cy="443" r="20" class="mangen-connector" />
-            <circle cx="420" cy="443" r="18" fill="#000" />
-            <circle cx="410" cy="443" r="2" fill="#aaa" />
-            <circle cx="413" cy="450" r="2" fill="#aaa" />
-            <circle cx="420" cy="453" r="2" fill="#aaa" />
-            <circle cx="427" cy="450" r="2" fill="#aaa" />
-            <circle cx="430" cy="443" r="2" fill="#aaa" />
-        </g>
-
-
-        <!-- Подписи -->
-        <g id="labels" transform="translate(0, 450)">
-            <text x="70" y="250" class="text-selector" fill="#ff0000">ПОДКЛЮЧЕНО</text>
-            <text x="90" y="340" class="text-selector" transform="rotate(-90 90 340)">ИЗОЛИРОВАНО</text>
-            <text x="70" y="360" class="text-selector" fill="#00aa00">ЗАЗЕМЛЕНО</text>
-
-
-
-            <text x="250" y="210" class="text">ВЫКЛЮЧАТЕЛЬ</text>
-
-            <!-- Металлические кольца -->
-            <circle cx="400" cy="200" r="5" class="selector_point" />
-            <circle cx="330" cy="270" r="5" class="selector_point" />
-            <circle cx="330" cy="350" r="15" class="metal" />
-            <polygon id="hexBolt" points="
-	330,340
-	338,345
-	338,355
-	330,360
-	322,355
-	322,345" fill="#666" stroke="#444" stroke-width="1" />
-
-            <text x="370" y="170" class="text-small">ВЫКЛЮЧАТЕЛЬ</text>
-            <text x="370" y="180" class="text-small">ОТКЛЮЧЕН</text>
-            <text x="370" y="190" class="text-small">И ЗАБЛОКИРОВАН</text>
-
-            <text x="300" y="290" class="text-small">ВКЛЮЧЕНИЕ</text>
-            <text x="300" y="300" class="text-small">ВЫКЛЮЧАТЕЛЯ</text>
-            <text x="300" y="310" class="text-small">РАЗРЕШЕНО</text>
-
-            <text x="300" y="380" class="text-small">ОПЕРИРОВАНИЕ</text>
-            <text x="300" y="390" class="text-small">РАЗЪЕДИНИТЕЛЕМ</text>
-        </g>
-
-        
-
-        <text id="commandH1" x="610" y="330" class="text-group">КОМАНДЫ</text>
-
-        <text x="605" y="40" class="text-group">СЦЕНАРИИ</text>
-
-        <!-- Рычаг справа -->
-        <g id="blockHandle" transform="rotate(0 400 720)">
-
-            <!-- Ромбовидная форма -->
-            <path d="
-        M 390 680
-        L 410 680
-		L 420 710
-        L 420 710
-        L 410 810
-        L 390 810
-		L 380 710
-		L 380 710
-        Z
-    " fill="#404040" stroke="#555" stroke-width="2" stroke-linejoin="round" />
-
-            <!-- Центральная кнопка (ось вращения) -->
-            <circle cx="400" cy="720" r="10" fill="#bbb" stroke="#666" stroke-width="2" />
-
-            <!-- Внутренний винт -->
-            <circle cx="400" cy="720" r="4" fill="#777" />
-
-        </g>
-
-        <path id="arrowCW" transform="translate(-10, -10)" class="arrow" d="
-  M 430 795
-  L 440 785
-  L 440 790
-  A 40 40 0 0 0 480 750
-  L 480 750
-  L 490 750
-  A 50 50 0 0 1 440 800
-  L 440 800
-  L 440 805
-  L 430 795
-  Z" />
-
-        <path id="arrowCCW" transform="translate(-10, -10)" class="arrow" d="
-  M 475 750
-  L 485 760
-  L 480 760
-  A 50 50 0 0 1 430 810
-  L 430 810
-  L 430 800
-  A 40 40 0 0 0 470 760
-  L 470 760
-  L 465 760
-  L 475 750
-  Z" />
-
-
-        <!-- КНОПКИ КОМАНД -->
-        <g id="commandPanel">
-
-            <!-- Кнопка Селектор по часовой -->
-            <g onclick="tryOperation(8)" style="cursor:pointer;">
-                <rect id="op8" x="530" y="360" width="240" height="20" class="button-operation" />
-                <text x="650" y="370" class="button-text">Селектор по часовой</text>
-            </g>
-
-            <!-- Кнопка Селектор против часовой -->
-            <g onclick="tryOperation(9)" style="cursor:pointer;">
-                <rect id="op9" x="530" y="390" width="240" height="20" class="button-operation" />
-                <text x="650" y="400" class="button-text">Селектор против часовой</text>
-            </g>
-
-            <!-- Кнопка Взять рукоятку селектора -->
-            <g onclick="tryOperation(6)" style="cursor:pointer;">
-                <rect id="op6" x="530" y="420" width="240" height="20" class="button-operation" />
-                <text x="650" y="430" class="button-text">Взять рукоятку селектора</text>
-            </g>
-
-            <!-- Кнопка Убрать рукоятку селектора -->
-            <g onclick="tryOperation(7)" style="cursor:pointer;">
-                <rect id="op7" x="530" y="450" width="240" height="20" class="button-operation" />
-                <text x="650" y="460" class="button-text">Убрать рукоятку селектора</text>
-            </g>
-
-            <!-- Кнопка Заблокировать выключатель -->
-            <g onclick="tryOperation(3)" style="cursor:pointer;">
-                <rect id="op3" x="530" y="480" width="240" height="20" class="button-operation" />
-                <text x="650" y="490" class="button-text">Заблокировать выключатель</text>
-            </g>
-
-            <!-- Кнопка Разблокировать выключатель -->
-            <g onclick="tryOperation(5)" style="cursor:pointer;">
-                <rect id="op5" x="530" y="510" width="240" height="20" class="button-operation" />
-                <text x="650" y="520" class="button-text">Разблокировать выключатель</text>
-            </g>
-
-            <!-- Легенда -->
-
-            <rect x="530" y="560" width="60" height="20" class="operation-allowed" />
-
-            <text x="600" y="573" class="text-legend">
-                Доступная операция
-            </text>
-
-            <rect x="530" y="590" width="60" height="20" class="operation-blocked" />
-
-            <text x="600" y="603" class="text-legend">
-                Недоступная операция
-            </text>
-
-        </g>
-
-        <!-- КНОПКИ СЦЕНАРИЕВ -->
-        <g id="scenarioPanel" transform="translate(0, 0)">
-            <!-- Кнопка Отключение выключателя -->
-            <g onclick="tryScenario(1)" style="cursor:pointer;">
-                <rect id="sc1" x="530" y="60" width="240" height="20" class="button-scenario" />
-                <text x="650" y="71" class="button-text">Отключение выключателя</text>
-            </g>
-
-            <!-- Кнопка Аварийное отключение выключателя -->
-            <g onclick="tryScenario(2)" style="cursor:pointer;">
-                <rect id="sc2" x="530" y="90" width="240" height="35" class="button-scenario" />
-                <text x="650" y="101" class="button-text">
-                    <tspan x="650" dy="0">Аварийное отключение</tspan>
-                    <tspan x="650" dy="1.2em">выключателя</tspan>
-                </text>
-            </g>
-
-            <!-- Кнопка Включение выключателя -->
-            <g onclick="tryScenario(3)" style="cursor:pointer;">
-                <rect id="sc3" x="530" y="135" width="240" height="20" class="button-scenario" />
-                <text x="650" y="146" class="button-text">Включение выключателя</text>
-            </g>
-
-            <!-- Кнопка Заземление кабельной линии -->
-            <g onclick="tryScenario(4)" style="cursor:pointer;">
-                <rect id="sc4" x="530" y="165" width="240" height="20" class="button-scenario" />
-                <text x="650" y="176" class="button-text">Заземление КЛ</text>
-            </g>
-
-            <!-- Кнопка Ввод кабельной линии в работу -->
-            <g onclick="tryScenario(5)" style="cursor:pointer;">
-                <rect id="sc5" x="530" y="195" width="240" height="20" class="button-scenario" />
-                <text x="650" y="206" class="button-text">Ввод КЛ в работу</text>
-            </g>
-
-            <!-- Кнопка Включение ручным генератором -->
-            <g onclick="tryScenario(6)" style="cursor:pointer;">
-                <rect id="sc6" x="530" y="225" width="240" height="35" class="button-scenario" />
-                <text x="650" y="236" class="button-text">
-                    <tspan x="650" dy="0">Включение ручным генератором</tspan>
-                    <tspan x="650" dy="1.2em">при отсутствии питания</tspan>
-                </text>
-            </g>
-        </g>
-
-        <!-- Тестовые кнопки перехода состояний -->
-        <g id="testPanel" transform="translate(0, 0)">
-
-            <!-- Кнопка "1" -->
-            <g onclick="forceState(1)" style="cursor:pointer;">
-                <rect x="25" y="380" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="34" y="397" class="nav-text">1</text>
-            </g>
-
-            <!-- Кнопка "2" -->
-            <g onclick="forceState(2)" style="cursor:pointer;">
-                <rect x="55" y="380" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="64" y="397" class="nav-text">2</text>
-            </g>
-
-            <!-- Кнопка "3" -->
-            <g onclick="forceState(3)" style="cursor:pointer;">
-                <rect x="85" y="380" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="94" y="397" class="nav-text">3</text>
-            </g>
-
-            <!-- Кнопка "4" -->
-            <g onclick="forceState(4)" style="cursor:pointer;">
-                <rect x="115" y="380" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="124" y="397" class="nav-text">4</text>
-            </g>
-
-            <!-- Кнопка "5" -->
-            <g onclick="forceState(5)" style="cursor:pointer;">
-                <rect x="145" y="380" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="154" y="397" class="nav-text">5</text>
-            </g>
-
-            <!-- Кнопка "6" -->
-            <g onclick="forceState(6)" style="cursor:pointer;">
-                <rect x="25" y="410" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="34" y="427" class="nav-text">6</text>
-            </g>
-
-            <!-- Кнопка "7" -->
-            <g onclick="forceState(7)" style="cursor:pointer;">
-                <rect x="55" y="410" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="64" y="427" class="nav-text">7</text>
-            </g>
-
-            <!-- Кнопка "8" -->
-            <g onclick="forceState(8)" style="cursor:pointer;">
-                <rect x="85" y="410" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="94" y="427" class="nav-text">8</text>
-            </g>
-
-            <!-- Кнопка "9" -->
-            <g onclick="forceState(9)" style="cursor:pointer;">
-                <rect x="115" y="410" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="124" y="427" class="nav-text">9</text>
-            </g>
-
-            <!-- Кнопка "10" -->
-            <g onclick="forceState(10)" style="cursor:pointer;">
-                <rect x="145" y="410" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="151" y="427" class="nav-text">10</text>
-            </g>
-
-            <!-- Кнопка "11" -->
-            <g onclick="forceState(11)" style="cursor:pointer;">
-                <rect x="25" y="440" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="31" y="457" class="nav-text">11</text>
-            </g>
-
-            <!-- Кнопка "12" -->
-            <g onclick="forceState(12)" style="cursor:pointer;">
-                <rect x="55" y="440" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="61" y="457" class="nav-text">12</text>
-            </g>
-
-            <!-- Кнопка "13" -->
-            <g onclick="hideHiddenMangen()" style="cursor:pointer;">
-                <rect x="85" y="440" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="91" y="457" class="nav-text">13</text>
-            </g>
-
-            <!-- Кнопка "14" -->
-            <g onclick="showHiddenMangen()" style="cursor:pointer;">
-                <rect x="115" y="440" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="121" y="457" class="nav-text">14</text>
-            </g>
-
-            <!-- Кнопка "15" -->
-            <g onclick="showPointer(document.getElementById('op2'), 0, 3000)" style="cursor:pointer;">
-                <rect x="145" y="440" width="25" height="25" rx="4" class="button-scenario" />
-                <text x="151" y="457" class="nav-text">15</text>
-            </g>
-
-        </g>
-
-        <!-- Заголовок сценария -->
-        <text id="textScenarioH1" x="530" y="310" class="text-group"></text>
-        <text id="textScenarioH2" x="530" y="330" class="text-group"></text>
-
-        <!-- Текст указаний при активном сценарии -->
-        <rect id="scenarioBack" x="520" y="340" width="260" height="280" rx="15" fill="#ccc" stroke="#999" stroke-width="2" />
-        <text id="scenarioNotification" x="530" y="360" class="text-notification"></text>
-
-        <text id="notification" transform="translate(0, 0)" x="60" y="500" class="text-notification"></text>
-
-        <!-- Указатель 👆 -->
-        <g id="pointer" transform="translate(-1000, -1000)" style="pointer-events: none;">
-            <circle cx="0" cy="0" r="40" fill="rgba(255, 255, 0, 0.3)" stroke="white" stroke-width="0" />
-            <text x="6" y="24" text-anchor="middle" dominant-baseline="middle" font-size="40" fill="white"
-                style="pointer-events: none;">👆</text>
-        </g>
-
-        <!-- Навигационные кнопки для сценариев -->
-        <g id="navPanel" transform="translate(0, 0)">
-
-            <!-- Кнопка "Назад" -->
-            <g id="btnPrev" onclick="navPrev()" style="cursor:pointer;">
-                <rect id="prevStep" x="525" y="559" width="125" height="25" rx="4" class="button-scenario" />
-                <text x="530" y="576" class="nav-text">⏪ Назад</text>
-            </g>
-
-            <!-- Кнопка "Далее" -->
-            <g id="btnNext" onclick="navNext()" style="cursor:pointer;">
-                <rect id="nextStep" x="655" y="559" width="120" height="25" rx="4" class="button-scenario" />
-                <text x="660" y="576" class="nav-text">⏩ Далее</text>
-            </g>
-
-            <!-- Кнопка "Завершить" -->
-            <g id="btnFinish" onclick="navFinish()" style="cursor:pointer;">
-                <rect id="finishScenario" x="525" y="588" width="250" height="25" rx="4" class="button-scenario" />
-                <text x="530" y="605" class="nav-text">❌ Завершить</text>
-            </g>
-
-        </g>
-
-        <!-- Ручной генератор -->
-        <g>
-            <rect x="520" y="640" width="100" height="180" fill="#563" stroke="#000" stroke-width="1" rx="6" ry="6" />
-            <circle cx="570" cy="680" r="15" fill="#341" />
-            <rect x="525" y="730" width="90" height="40" fill="#ccc" stroke="#000" stroke-width="1" rx="2" ry="2" />
-            <text x="570" y="750" class="text-mangen-black" text-anchor="middle" dominant-baseline="middle">
-                <tspan x="570" dy="0">РУЧНОЙ ГЕНЕРАТОР</tspan>
-                <tspan x="570" dy="1.05em">TER_CBunit_ManGen_1</tspan>
-                <tspan x="570" dy="1.05em">для TER_CM16</tspan>
-            </text>
-            <rect x="525" y="730" width="90" height="12" fill="#006853" stroke="#000" stroke-width="1" rx="2" ry="2" />
-            <text x="570" y="736" class="text-mangen-white" text-anchor="middle" dominant-baseline="middle">ТАВРИДА
-                ЭЛЕКТРИК</text>
-        </g>
-
-        <!-- Скрытая часть ручного генератора - шнур и разъем -->
-        <g id="hiddenMangen">
-            <rect x="545" y="820" width="10" height="30" fill="#ddd" stroke="#000" stroke-width="1" />
-            <rect x="540" y="820" width="20" height="10" fill="#ddd" stroke="#000" stroke-width="1" />
-            <!-- Полуокружность сверху (скругление перехода) -->
-            <path d="M 520 880 A 30 30 0 0 0 550 850" fill="none" stroke="black" stroke-width="10" />
-            <line x1="450" y1="880" x2="520" y2="880" stroke="black" stroke-width="10" />
-            <path d="M 420 850 A 30 30 0 0 0 450 880" fill="none" stroke="black" stroke-width="10" />
-
-            <!-- Пружина (имитация) -->
-            <line x1="420" y1="850" x2="440" y2="850" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="840" x2="440" y2="840" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="830" x2="440" y2="830" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="820" x2="440" y2="820" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="810" x2="440" y2="810" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="800" x2="440" y2="800" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="790" x2="440" y2="790" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="780" x2="440" y2="780" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="770" x2="440" y2="770" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="760" x2="440" y2="760" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="750" x2="440" y2="750" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="740" x2="440" y2="740" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="730" x2="440" y2="730" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="720" x2="440" y2="720" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="710" x2="440" y2="710" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="700" x2="440" y2="700" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="690" x2="440" y2="690" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="680" x2="440" y2="680" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="670" x2="440" y2="670" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="660" x2="440" y2="660" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="650" x2="440" y2="650" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="640" x2="440" y2="640" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="630" x2="440" y2="630" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="620" x2="440" y2="620" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="610" x2="440" y2="610" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="600" x2="440" y2="600" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="590" x2="440" y2="590" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="580" x2="440" y2="580" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="570" x2="440" y2="570" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="560" x2="440" y2="560" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="550" x2="440" y2="550" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="540" x2="440" y2="540" stroke="#000" stroke-width="10" stroke-linecap="round" />
-            <line x1="420" y1="530" x2="440" y2="530" stroke="#000" stroke-width="10" stroke-linecap="round" />
-
-            <line x1="420" y1="530" x2="420" y2="443" stroke="black" stroke-width="10" />
-            <circle cx="420" cy="443" r="18" fill="#000" />
-        </g>
-
-        <!-- Рукоятка ручного генератора -->
-        <g id="handleMangen">
-            <rect x="565" y="680" width="10" height="180" fill="#ddd" stroke="#000" stroke-width="1" />
-            <circle cx="570" cy="680" r="10" fill="#ddd" stroke="#000" stroke-width="1" />
-            <circle cx="570" cy="860" r="15" fill="#eee" stroke="#000" stroke-width="1" />
-        </g>
-
-        <!-- Рукоятка оперирования селектором спереди -->
-
-        <g id="handleOn" display="none">
-
-            <circle cx="330" cy="800" r="22" fill="#1f1f1f" />
-            <rect x="318" y="788" width="24" height="110" rx="12" fill="black" />
-            <circle cx="330" cy="888" r="10" fill="#111" />
-
-        </g>
-
-        <!-- Рукоятка оперирования селектором сбоку-->
-
-        <g id="handleOff">
-            <rect x="640" y="770" width="50" height="20" rx="1" fill="black" />
-            <rect x="700" y="690" width="75" height="10" rx="1" class="metal" />
-            <rect x="680" y="670" width="24" height="124" rx="2" fill="black" />
-        </g>
-
-
-
-    </svg>
-
+    <!-- Главный контейнер приложения, куда пошагово будем помещать элементы -->
+    <main id="app">
+        <!-- ======================================================== -->
+        <!-- 1. ВЕРХНЯЯ ПОЛОВИНА: БЛОК MMI (БЕЗ ИСПОЛЬЗОВАНИЯ SCALE)      -->
+        <!-- viewBox="15 15 470 470" автоматически вписывает панель   -->
+        <!-- ======================================================== -->
+        <section class="mmi-section">
+            <svg viewBox="15 15 470 470" preserveAspectRatio="xMidYMin meet">
+                <g id="mmiPanel">
+                    <!-- Корпус блока MMI -->
+                    <rect x="20" y="20" width="460" height="350" class="mmi-panel" />
+
+                    <!-- Дисплей терминала -->
+                    <rect x="50" y="40" width="400" height="90" class="display-panel" />
+
+                    <!-- Разделительные линии дисплея -->
+                    <g id="mmi-line">
+                        <line x1="55" y1="57" x2="445" y2="57" stroke="#00cc00" stroke-width="2" />
+                        <line x1="55" y1="115" x2="445" y2="115" stroke="#00cc00" stroke-width="2" />
+                    </g>
+
+                    <!-- Строки дисплея для вывода текста через JS -->
+                    <text id="mmi-display-first-line-text" x="55" y="52" class="text-mmi-display"></text>
+                    <text id="mmi-display-text" x="55" y="70" class="text-mmi-display"></text>
+                    <text id="mmi-display-date" x="250" y="124" class="data-mmi-display"></text>
+
+                    <!-- Рамки функциональных блоков -->
+                    <rect x="50" y="160" width="190" height="90" class="mmi-border" />
+                    <rect x="255" y="160" width="205" height="45" class="mmi-border" />
+
+                    <text x="145" y="155" class="text-mmi-border">УПРАВЛЕНИЕ ВВ</text>
+                    <text x="357" y="155" class="text-mmi-border">ПРОСМОТР ЖУРНАЛОВ</text>
+
+                    <text x="95" y="185" class="text-mmi-on-off">ВКЛЮЧЕНО</text>
+                    <text x="170" y="185" class="text-mmi-on-off">ОТКЛЮЧЕНО</text>
+
+                    <!-- Кнопка включения ВВ (op1) -->
+                    <g id="btnMMIOn" onclick="tryOperation(1)" style="cursor:pointer;">
+                        <rect id="op1" x="85" y="190" width="40" height="40" class="button-on" />
+                        <text x="105" y="210" class="button-text">I</text>
+                    </g>
+                    <!-- Индикатор ВКЛ -->
+                    <circle id="indicatorOn" cx="90" cy="183" r="3" fill="#ffffff" class="indicator-led" />
+
+                    <!-- Кнопка отключения ВВ (op2) -->
+                    <g id="btnMMIOff" onclick="tryOperation(2)" style="cursor:pointer;">
+                        <rect id="op2" x="165" y="190" width="40" height="40" class="button-off" />
+                        <text x="185" y="210" class="button-text">O</text>
+                    </g>
+                    <!-- Индикатор ОТКЛ -->
+                    <circle id="indicatorOff" cx="165" cy="183" r="3" fill="#ff0000" class="indicator-led" />
+
+                    <!-- Кнопки навигации MMI (стрелки, отмена, ввод) -->
+                    <g id="mmiNavButtons">
+                        <rect x="50" y="265" width="55" height="30" class="button-mmi" />
+                        <text x="77" y="280" class="text-mmi-button">ОТМЕНА</text>
+
+                        <rect x="115" y="265" width="55" height="30" class="button-mmi" />
+                        <text x="142" y="280" class="text-mmi-button">▲</text>
+
+                        <rect x="180" y="265" width="55" height="30" class="button-mmi" />
+                        <text x="207" y="280" class="text-mmi-button">ВВОД</text>
+
+                        <rect x="50" y="310" width="55" height="30" class="button-mmi" />
+                        <text x="77" y="325" class="text-mmi-button">◄</text>
+
+                        <rect x="115" y="310" width="55" height="30" class="button-mmi" />
+                        <text x="142" y="325" class="text-mmi-button">▼</text>
+                        <rect x="180" y="310" width="55" height="30" class="button-mmi" />
+                        <text x="207" y="325" class="text-mmi-button">►</text>
+                    </g>
+
+                    <!-- Кнопки журналов MMI -->
+                    <g id="mmiJournalButtons">
+                        <rect x="265" y="170" width="55" height="30" class="button-mmi" />
+                        <text x="292" y="185" class="text-mmi-button">СОБЫТИЯ</text>
+                        <text x="270" y="180" class="text-mmi-number-button">1</text>
+
+                        <rect id="malfunButton" x="330" y="170" width="55" height="30" class="button-mmi" />
+                        <text x="360" y="180" class="text-mmi-button">
+                            <tspan x="360" dy="0">НЕИСПР.</tspan>
+                            <tspan x="360" dy="1.2em">ПРЕДУПР.</tspan>
+                        </text>
+                        <text x="335" y="180" class="text-mmi-number-button">2</text>
+
+                        <rect id="measButton" x="395" y="170" width="55" height="30" class="button-mmi" />
+                        <text x="422" y="185" class="text-mmi-button">ИЗМЕРЕНИЯ</text>
+                        <text x="400" y="180" class="text-mmi-number-button">3</text>
+                    </g>
+
+                    <!-- Кнопки функций РЗА -->
+                    <g id="mmiRzaButtons">
+                        <rect x="265" y="220" width="55" height="30" class="button-mmi" />
+                        <text x="292" y="235" class="text-mmi-button">АПВ</text>
+                        <text x="270" y="230" class="text-mmi-number-button">4</text>
+
+                        <rect x="330" y="220" width="55" height="30" class="button-mmi" />
+                        <text x="357" y="235" class="text-mmi-button">АВР</text>
+                        <text x="335" y="230" class="text-mmi-number-button">5</text>
+
+                        <rect x="395" y="220" width="55" height="30" class="button-mmi" />
+                        <text x="422" y="235" class="text-mmi-button">ОЗЗ</text>
+                        <text x="400" y="230" class="text-mmi-number-button">6</text>
+
+                        <rect x="265" y="265" width="55" height="30" class="button-mmi" />
+                        <text x="292" y="280" class="text-mmi-button">ЗЗЗ</text>
+                        <text x="270" y="275" class="text-mmi-number-button">7</text>
+
+                        <rect x="330" y="265" width="55" height="30" class="button-mmi" />
+                        <text x="357" y="280" class="text-mmi-button">КВИТ.</text>
+                        <text x="335" y="275" class="text-mmi-number-button">8</text>
+
+                        <rect x="395" y="265" width="55" height="30" class="button-mmi" />
+                        <text x="422" y="280" class="text-mmi-button">ЛЗШ</text>
+                        <text x="400" y="275" class="text-mmi-number-button">9</text>
+
+                        <rect x="265" y="310" width="55" height="30" class="button-mmi" />
+                        <text x="292" y="325" class="text-mmi-button">МЕСТН.</text>
+
+                        <rect x="330" y="310" width="55" height="30" class="button-mmi" />
+                        <text x="335" y="320" class="text-mmi-number-button">0</text>
+
+                        <rect x="395" y="310" width="55" height="30" class="button-mmi" />
+                        <text x="422" y="325" class="text-mmi-button">ГРУППА</text>
+                        <text x="400" y="320" class="text-mmi-number-button">.</text>
+                    </g>
+
+                    <!-- Светодиодные индикаторы статусов -->
+                    <g id="mmiLeds">
+                        <!-- Над кнопкой 1 -->
+                        <circle cx="270" cy="165" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="277" y="167" class="text-mmi-on-off">События</text>
+                        <!-- Над кнопкой 2 -->
+                        <circle cx="335" cy="165" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="342" y="167" class="text-mmi-on-off">Неисправн.</text>
+                        <!-- Над кнопкой 3 -->
+                        <circle cx="400" cy="165" r="3" fill="#ffffff" class="indicator-led" />
+                        <!-- Над кнопкой 4 -->
+                        <circle cx="270" cy="215" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="277" y="217" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="295" cy="215" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="302" y="217" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Над кнопкой 5 -->
+                        <circle cx="335" cy="215" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="342" y="217" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="360" cy="215" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="367" y="217" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Над кнопкой 6 -->
+                        <circle cx="400" cy="215" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="407" y="217" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="425" cy="215" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="432" y="217" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Над кнопкой 7 -->
+                        <circle cx="270" cy="260" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="277" y="262" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="295" cy="260" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="302" y="262" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Над кнопкой 8 -->
+                        <circle cx="335" cy="260" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="342" y="262" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="360" cy="260" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="367" y="262" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Над кнопкой 9 -->
+                        <circle cx="400" cy="260" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="407" y="262" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="425" cy="260" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="432" y="262" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Над кнопкой МЕСТН. -->
+                        <circle cx="270" cy="305" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="277" y="307" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="295" cy="305" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="302" y="307" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Над кнопкой 0 -->
+                        <circle cx="335" cy="305" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="342" y="307" class="text-mmi-on-off">ВКЛ</text>
+                        <circle cx="360" cy="305" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="367" y="307" class="text-mmi-on-off">ОТКЛ</text>
+                        <!-- Индикаторы групп уставок -->
+                        <circle cx="400" cy="305" r="3" fill="#ff0000" class="indicator-led" />
+                        <text x="405" y="307" class="text-mmi-on-off">1</text>
+                        <circle cx="413" cy="305" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="418" y="307" class="text-mmi-on-off">2</text>
+                        <circle cx="426" cy="305" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="431" y="307" class="text-mmi-on-off">3</text>
+                        <circle cx="439" cy="305" r="3" fill="#ffffff" class="indicator-led" />
+                        <text x="444" y="307" class="text-mmi-on-off">4</text>
+                    </g>
+                </g>
+
+                <!-- 2. РАЗЪЕМ ДЛЯ РУЧНОГО ГЕНЕРАТОРА (МЕЖДУ MMIPANEL И SCHEME СПРАВА) -->
+                <g id="generatorHarting">
+                    <rect x="380" y="375" width="80" height="40" fill="none" stroke="#000" stroke-width="1" rx="2"
+                        ry="2" />
+
+                    <text x="420" y="383" class="text" text-anchor="middle" dominant-baseline="middle">
+                        <tspan x="420" dy="0">РАЗЪЕМ</tspan>
+                        <tspan x="420" dy="1.15em">для ручного</tspan>
+                        <tspan x="420" dy="1.15em">генератора</tspan>
+                    </text>
+
+                    <rect x="395" y="418" width="50" height="50" class="mangen-connector" />
+                    <circle cx="420" cy="443" r="20" class="mangen-connector" />
+                    <circle cx="420" cy="443" r="18" fill="#000" />
+                    <circle cx="410" cy="443" r="2" fill="#aaa" />
+                    <circle cx="413" cy="450" r="2" fill="#aaa" />
+                    <circle cx="420" cy="453" r="2" fill="#aaa" />
+                    <circle cx="427" cy="450" r="2" fill="#aaa" />
+                    <circle cx="430" cy="443" r="2" fill="#aaa" />
+                </g>
+            </svg>
+        </section>
+        <!-- ======================================================== -->
+        <!-- 2. НИЖНЯЯ ПОЛОВИНА: SCHEME И БЛОК ДЛЯ ТРЕХ КНОПОК        -->
+        <!-- viewBox="45 610 450 295" охватывает всю схему и детали   -->
+        <!-- ======================================================== -->
+        <section class="bottom-section">
+            <div class="scheme-wrapper">
+                <svg viewBox="45 610 450 350" preserveAspectRatio="xMidYMin meet">
+                    <!-- ФОНОВАЯ КАРТОЧКА МНЕМОСХЕМЫ (НА ЗАДНЕМ ПЛАНЕ) -->
+                    <rect x="50" y="615" width="440" height="305" class="scheme-card-bg" />
+                    <!-- ОСНОВНАЯ МНЕМОСХЕМА КРУ -->
+                    <g id="schemeElements" transform="translate(0, 40)">
+                        <g id="scheme" transform="translate(0, 450)">
+                            <!-- Верхняя шина -->
+                            <line x1="100" y1="180" x2="320" y2="180" class="scheme-line" />
+                            <line x1="150" y1="180" x2="150" y2="250" class="scheme-line" />
+
+                            <!-- Подвижный нож поворотного селектора -->
+                            <g id="selector_pos">
+                                <line x1="100" y1="300" x2="150" y2="300" class="scheme-line" />
+                            </g>
+
+                            <!-- Центральный узел селектора -->
+                            <circle cx="150" cy="300" r="8" fill="#222222" />
+
+                            <!-- Контур заземления -->
+                            <line x1="150" y1="350" x2="150" y2="370" class="scheme-line" />
+                            <line x1="130" y1="370" x2="170" y2="370" class="scheme-line" />
+                            <line x1="138" y1="380" x2="162" y2="380" class="scheme-line" />
+                            <line x1="146" y1="390" x2="154" y2="390" class="scheme-line" />
+
+                            <!-- Ветвь к выключателю -->
+                            <line x1="150" y1="300" x2="200" y2="300" class="scheme-line" />
+                            <line x1="200" y1="300" x2="200" y2="220" class="scheme-line" />
+                            <line x1="200" y1="220" x2="270" y2="220" class="scheme-line" />
+                            <line x1="270" y1="220" x2="270" y2="250" class="scheme-line" />
+                            <polygon points="265,370 275,370 270,390" fill="#222222" />
+
+                            <!-- Выключатель и нож switchLine -->
+                            <circle cx="270" cy="270" r="20" fill="none" stroke="#c62828" stroke-width="2" />
+                            <line id="switchLine" x1="270" y1="270" x2="282" y2="258" class="scheme-line" />
+                            <line x1="270" y1="270" x2="270" y2="370" class="scheme-line" />
+                        </g>
+
+                        <!-- НАДПИСИ И ГНЕЗДА МНЕМОСХЕМЫ -->
+                        <g id="labels" transform="translate(0, 450)">
+                            <text x="70" y="250" class="text-selector" fill="#ff0000">ПОДКЛЮЧЕНО</text>
+                            <text x="90" y="340" class="text-selector" transform="rotate(-90 90 340)">ИЗОЛИРОВАНО</text>
+                            <text x="70" y="360" class="text-selector" fill="#00aa00">ЗАЗЕМЛЕНО</text>
+
+                            <text x="250" y="210" class="text">ВЫКЛЮЧАТЕЛЬ</text>
+
+                            <!-- Точки-индикаторы и гнездо селектора -->
+                            <circle cx="400" cy="200" r="5" class="selector_point" />
+                            <circle cx="330" cy="270" r="5" class="selector_point" />
+                            <circle cx="330" cy="350" r="15" class="metal" />
+                            <polygon id="hexBolt" points="330,340 338,345 338,355 330,360 322,355 322,345"
+                                fill="#666666" stroke="#444444" stroke-width="1" />
+
+                            <text x="370" y="170" class="text-small">ВЫКЛЮЧАТЕЛЬ</text>
+                            <text x="370" y="180" class="text-small">ОТКЛЮЧЕН</text>
+                            <text x="370" y="190" class="text-small">И ЗАБЛОКИРОВАН</text>
+
+                            <text x="300" y="290" class="text-small">ВКЛЮЧЕНИЕ</text>
+                            <text x="300" y="300" class="text-small">ВЫКЛЮЧАТЕЛЯ</text>
+                            <text x="300" y="310" class="text-small">РАЗРЕШЕНО</text>
+                            <text x="300" y="380" class="text-small">ОПЕРИРОВАНИЕ</text>
+                            <text x="300" y="390" class="text-small">РАЗЪЕДИНИТЕЛЕМ</text>
+                        </g>
+
+                        <!-- РЫЧАГ БЛОКИРОВКИ СПРАВА -->
+                        <g id="blockHandle" transform="rotate(0 400 720)">
+                            <path d="M 390 680 L 410 680 L 420 710 L 420 710 L 410 810 L 390 810 L 380 710 L 380 710 Z"
+                                fill="#404040" stroke="#555555" stroke-width="2" stroke-linejoin="round" />
+                            <circle cx="400" cy="720" r="10" fill="#bbbbbb" stroke="#666666" stroke-width="2" />
+                            <circle cx="400" cy="720" r="4" fill="#777777" />
+                        </g>
+
+                        <!-- СТРЕЛКИ НАПРАВЛЕНИЯ ВРАЩЕНИЯ РЫЧАГА (display: none по умолчанию) -->
+                        <!--<path id="arrowCW" style="display:none;" transform="translate(-10, -10)" class="arrow"-->
+                        <path id="arrowCW" transform="translate(-10, -10)" class="arrow"
+                            d="M 430 795 L 440 785 L 440 790 A 40 40 0 0 0 480 750 L 480 750 L 490 750 A 50 50 0 0 1 440 800 L 440 800 L 440 805 L 430 795 Z" />
+                        <!--<path id="arrowCCW" style="display:none;" transform="translate(-10, -10)" class="arrow"-->
+                        <path id="arrowCCW" transform="translate(-10, -10)" class="arrow"
+                            d="M 475 750 L 485 760 L 480 760 A 50 50 0 0 1 430 810 L 430 810 L 430 800 A 40 40 0 0 0 470 760 L 470 760 L 465 760 L 475 750 Z" />
+
+                        <!-- РУКОЯТКА СЕЛЕКТОРА ВСТАВЛЕННАЯ СПЕРЕДИ (display: none по умолчанию) -->
+                        <!--<g id="handleOn" style="display:none;">-->
+                        <g id="handleOn">
+                            <circle cx="330" cy="800" r="22" fill="#1f1f1f" />
+                            <rect x="318" y="788" width="24" height="110" rx="12" fill="#000000" />
+                            <circle cx="330" cy="888" r="10" fill="#111111" />
+                        </g>
+                        <!-- РУКОЯТКА СЕЛЕКТОРА СБОКУ (ЗА ПРАВОЙ ГРАНИЦЕЙ ЭКРАНА) -->
+                        <!-- Чтобы переместить ее к гнезду, необходимо сдвинуть влево на 300 -->
+                        <g id="handleOff" transform="translate(300, 0)" class="movable">
+                            <rect x="200" y="875" width="50" height="20" rx="1" fill="#000000" />
+                            <rect x="260" y="795" width="70" height="10" rx="1" class="metal" />
+                            <rect x="240" y="775" width="24" height="124" rx="2" fill="#000000" />
+                        </g>
+                        <!-- РУЧНОЙ ГЕНЕРАТОР (ВРЕМЕННО СДВИНУТ НА ЭКРАН) -->
+                        <!-- Чтобы убрать его за экран, просто удалите transform="translate(-150, 0)" -->
+                        <!-- <g id="manGen" class="movable" transform="translate(-300, 50)">
+                            
+                            <!-- Корпус генератора -->
+                            <rect x="520" y="640" width="100" height="180" fill="#556b2f" stroke="#000" stroke-width="1.5" rx="6" ry="6" />
+                            <circle cx="570" cy="680" r="15" fill="#283618" />
+                            
+                            <!-- Шильдик / табличка -->
+                            <rect x="525" y="730" width="90" height="40" fill="#cccccc" stroke="#000" stroke-width="1" rx="2" ry="2" />
+                            <text x="570" y="750" class="text-mangen-black">
+                                <tspan x="570" dy="0">РУЧНОЙ ГЕНЕРАТОР</tspan>
+                                <tspan x="570" dy="1.15em">TER_CBunit_ManGen_1</tspan>
+                                <tspan x="570" dy="1.15em">для TER_CM16</tspan>
+                            </text>
+                            <rect x="525" y="730" width="90" height="12" fill="#006853" stroke="#000" stroke-width="1" rx="2" ry="2" />
+                            <text x="570" y="736" class="text-mangen-white">ТАВРИДА ЭЛЕКТРИК</text>
+
+                            <!-- Поворотная рукоятка генератора -->
+                            <g id="handleMangen">
+                                <rect x="565" y="680" width="10" height="140" fill="#dddddd" stroke="#000" stroke-width="1" rx="2" />
+                                <circle cx="570" cy="680" r="10" fill="#dddddd" stroke="#000" stroke-width="1" />
+                                <circle cx="570" cy="820" r="14" fill="#eeeeee" stroke="#000" stroke-width="1.5" />
+                            </g>
+                        </g> -->
+
+                    </g>
+
+                </svg>
+            </div>
+
+            <!-- ЗОНА ПОД 3 КНОПКИ ВНИЗУ (ПРИЖАТА К НИЗУ ЭКРАНА) -->
+            <div class="bottom-nav-container">
+                <nav id="bottomNavCard" class="bottom-nav-card">
+                    <!-- Кнопка 1: Сценарии (по умолчанию активна) -->
+                    <button id="btnTabScenarios" class="nav-btn" type="button">
+                        ⚡ Сценарии
+                    </button>
+
+                    <!-- Кнопка 2: Управление -->
+                    <button id="btnTabControl" class="nav-btn" type="button">
+                        📟 Управление
+                    </button>
+
+                    <!-- Кнопка 3: Блокировки -->
+                    <button id="btnTabLocks" class="nav-btn" type="button">
+                        🔒 Блокировки
+                    </button>
+                </nav>
+            </div>
+        </section>
+        <!-- ======================================================== -->
+        <!-- ВСПЛЫВАЮЩИЕ ПАНЕЛИ РАЗДЕЛОВ (ЗА ПРЕДЕЛАМИ ЭКРАНА ВНИЗУ)  -->
+        <!-- ======================================================== -->
+
+        <!-- 1. Панель "Сценарии" -->
+        <div id="drawerScenarios" class="menu-drawer">
+            <div class="menu-drawer-card">
+                <button class="drawer-btn" type="button">Отключение выключателя</button>
+                <button class="drawer-btn" type="button">Аварийное отключение</button>
+                <button class="drawer-btn" type="button">Включение выключателя</button>
+                <button class="drawer-btn" type="button">Заземление КЛ</button>
+                <button class="drawer-btn" type="button">Ввод КЛ в работу</button>
+                <button class="drawer-btn" type="button">Включение от ручного генератора</button>
+                <button class="drawer-btn drawer-btn-close" type="button">Скрыть</button>
+            </div>
+        </div>
+
+        <!-- 2. Панель "Управление" -->
+        <div id="drawerControl" class="menu-drawer">
+            <div class="menu-drawer-card">
+                <button class="drawer-btn" type="button">Просмотр событий</button>
+                <button class="drawer-btn" type="button">Просмотр неисправностей</button>
+                <button class="drawer-btn" type="button">Квитирование неисправностей</button>
+                <button class="drawer-btn" type="button">Сброс блокировки включения</button>
+                <button class="drawer-btn" type="button">Просмотр измерений</button>
+                <button class="drawer-btn drawer-btn-close" type="button">Скрыть</button>
+            </div>
+        </div>
+
+        <!-- 3. Панель "Блокировки" -->
+        <div id="drawerLocks" class="menu-drawer">
+            <div class="menu-drawer-card">
+                <button class="drawer-btn" type="button">Блокировка разъединителя</button>
+                <button class="drawer-btn" type="button">Блокировка выключателя</button>
+                <button class="drawer-btn" type="button">Снятие заземления</button>
+                <button class="drawer-btn" type="button">Блокировка двери КО</button>
+                <button class="drawer-btn drawer-btn-close" type="button">Скрыть</button>
+            </div>
+        </div>
+    </main>
     <script>
-
-        /* Исходное состояние схемы */
-        let currentState = 8; // текущее состояние схемы
-
-        let handleAngle = 0; // 0 = вертикально, 90 = горизонтально
-
-        let selectorAngle = 0; // глобальный угол селектора
-
-        let currentStep = 0; // текущий шаг сценария
-
-        let stepCount = 0; // количество шагов сценария
-
-        let currentScenario = 0; // текущий сценарий
-
-        const blockHandle = document.getElementById("blockHandle");
-
-        // Раздел вращения рукоятки селектора:
-        const handleOn = document.getElementById("handleOn");
-        const handleOff = document.getElementById("handleOff");
-        handleOff.classList.add("movable");
-
-        hideNavButtons();
-
-        /* Состояния */
-        const states = {
-            1: {
-                // выключатель включен, селектор подключен, выключатель разблокирован, рукоятка на стенде
-                breaker: "on",
-                selector: 90,
-                locked: false,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель включен",
-                    "  2. Селектор подключен",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель разблокирован"
-                ]
-            },
-            2: {
-                // выключатель включен, селектор изолирован, выключатель разблокирован, рукоятка на стенде
-                breaker: "on",
-                selector: 0,
-                locked: false,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель включен",
-                    "  2. Селектор изолирован",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель разблокирован"
-                ]
-            },
-            3: {
-                // выключатель включен, селектор заземлен, выключатель разблокирован, рукоятка на стенде
-                breaker: "on",
-                selector: -90,
-                locked: false,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель включен",
-                    "  2. Селектор заземлён",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель разблокирован"
-                ]
-            },
-            4: {
-                // выключатель отключен, селектор подключен, выключатель разблокирован, рукоятка на стенде
-                breaker: "off",
-                selector: 90,
-                locked: false,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор подключен",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель разблокирован"
-                ]
-            },
-            5: {
-                // выключатель отключен, селектор изолирован, выключатель разблокирован, рукоятка на стенде
-                breaker: "off",
-                selector: 0,
-                locked: false,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор изолирован",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель разблокирован"
-                ]
-            },
-            6: {
-                // выключатель отключен, селектор заземлен, выключатель разблокирован, рукоятка на стенде
-                breaker: "off",
-                selector: -90,
-                locked: false,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор заземлён",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель разблокирован"
-                ]
-            },
-            7: {
-                // выключатель отключен, селектор подключен, выключатель заблокирован, рукоятка на стенде
-                breaker: "off",
-                selector: 90,
-                locked: true,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор подключен",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель заблокирован"
-                ]
-            },
-            8: {
-                // выключатель отключен, селектор изолирован, выключатель заблокирован, рукоятка на стенде
-                breaker: "off",
-                selector: 0,
-                locked: true,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор изолирован",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель заблокирован"
-                ]
-            },
-            9: {
-                // выключатель отключен, селектор заземлен, выключатель заблокирован, рукоятка на стенде
-                breaker: "off",
-                selector: -90,
-                locked: true,
-                selectorHandleOn: false,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор заземлён",
-                    "  3. Рукоятка извлечена",
-                    "  4. Выключатель заблокирован"
-                ]
-            },
-            10: {
-                // выключатель отключен, селектор подключен, выключатель заблокирован, рукоятка в ячейке
-                breaker: "off",
-                selector: 90,
-                locked: true,
-                selectorHandleOn: true,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор подключен",
-                    "  3. Рукоятка вставлена",
-                    "  4. Выключатель заблокирован"
-                ]
-            },
-            11: {
-                // выключатель отключен, селектор изолирован, выключатель заблокирован, рукоятка в ячейке
-                breaker: "off",
-                selector: 0,
-                locked: true,
-                selectorHandleOn: true,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор изолирован",
-                    "  3. Рукоятка вставлена",
-                    "  4. Выключатель заблокирован"
-                ]
-            },
-            12: {
-                // выключатель отключен, селектор заземлен, выключатель заблокирован, рукоятка в ячейке
-                breaker: "off",
-                selector: -90,
-                locked: true,
-                selectorHandleOn: true,
-                info: [
-                    "  1. Выключатель отключён",
-                    "  2. Селектор заземлён",
-                    "  3. Рукоятка вставлена",
-                    "  4. Выключатель заблокирован"
-                ]
-            }
-        };
-
-        /* Матрица переходов:
-        На примере состояния №1
-        допустимы переходы из состояний №4 и №7
-        посредством операций №2 и №3
-        соответственно */
-        const transitionMatrix = {
-            1: { 4: 2, 7: 3 },
-            2: { 5: 2, 8: 3 },
-            3: { 6: 2, 9: 3 },
-
-            4: { 1: 1, 7: 3 },
-            5: { 2: 1, 8: 3 },
-            6: { 3: 1, 9: 3 },
-
-            7: { 4: 5, 10: 6 },
-            8: { 5: 5, 11: 6 },
-            9: { 6: 5, 12: 6 },
-
-            10: { 7: 7, 11: 9 },
-            11: { 8: 7, 10: 8, 12: 9 },
-            12: { 9: 7, 11: 8 }
-        };
-
-        // Операции
-        const operations = {
-            1: turnOn,
-            2: turnOff,
-            3: turnOffAndlockBreaker,
-            4: lockBreaker,
-            5: unlockBreaker,
-            6: takeOnHandle,
-            7: takeOffHandle,
-            8: selectorToRight,
-            9: selectorToLeft
-        };
-
-        const scenarios = {
-            1: [ // Сценарий 1. Отключение выключателя
-                {
-                    description: "Собрать исходную схему",
-                    notification: [
-                        "Шаг 1️⃣/2️⃣"
-                    ],
-                    operation: null
-                },
-                {
-                    description: "Отключить выключатель",
-                    notification: [
-                        "Шаг 2️⃣/2️⃣",
-                        "Отключение выключателя",
-                        "  1. Нажмите кнопку 'O'",
-                        "  (удержите более 0,3 сек)",
-                        "  2. Убедитесь по мнемосхеме,",
-                        "  что выключатель отключен"
-                    ],
-                    operation: () => tryOperation(2),
-                    prevOperation: () => forceState((currentState - 1) % 3 + 1),
-                    showPointer: () => showPointer(op2, 0, 3000),
-                    blockButtons: () => blockAllButtonsTemporarily(3000)
-                }
-            ],
-            2: [ // Сценарий 2. Аварийное отключение выключателя
-                {
-                    description: "Собрать исходную схему",
-                    notification: [
-                        "Шаг 1️⃣/2️⃣"
-                    ],
-                    operation: null
-                },
-                {
-                    description: "Отключить и заблокировать выключатель",
-                    notification: [
-                        "Шаг 2️⃣/2️⃣",
-                        "Аварийное отключение",
-                        "  1. Поверните рукоятку блокировки",
-                        "  на 90° по часовой стрелке",
-                        " (с усилием)",
-                        "  2. Убедитесь по мнемосхеме,",
-                        "  что выключатель отключен"
-                    ],
-                    operation: () => tryOperation(3),
-                    prevOperation: () => forceState((currentState - 1) % 3 + 1),
-                    showArrow: () => showArrows(true)
-                }
-            ],
-            3: [ // Сценарий 3. Включение выключателя
-                {
-                    description: "Собрать исходную схему",
-                    notification: [
-                        "Шаг 1️⃣/4️⃣"
-                    ],
-                    operation: null
-                },
-                {
-                    description: "Извлечь рукоятку",
-                    notification: [
-                        "Шаг 2️⃣/4️⃣",
-                        "Извлечение рукоятки",
-                        "  Извлеките рукоятку селектора",
-                        "  из гнезда (пропустите шаг,",
-                        "  если рукоятка ужеизвлечена)"
-                    ],
-                    operation: () => tryOperation(7),
-                    prevOperation: () => forceState(currentState + 3)
-                },
-                {
-                    description: "Разблокировать выключатель",
-                    notification: [
-                        "Шаг 3️⃣/4️⃣",
-                        "Разблокировка выключателя",
-                        "  Поверните рукоятку блокировки",
-                        "  на 90° против часовой стрелки",
-                        "  (пропустите шаг, если",
-                        "  выключатель уже разблокирован)"
-                    ],
-                    operation: () => tryOperation(5),
-                    prevOperation: () => forceState(currentState + 3),
-                    showArrow: () => showArrows(false)
-                },
-                {
-                    description: "Включить выключатель",
-                    notification: [
-                        "Шаг 4️⃣/4️⃣",
-                        "Включение выключателя",
-                        "  1. Нажмите кнопку 'I'",
-                        "  (удержите более 0,3 сек)",
-                        "  2. Убедитесь по мнемосхеме,",
-                        "  что выключатель включен"
-                    ],
-                    operation: () => tryOperation(1),
-                    prevOperation: () => forceState(currentState + 3),
-                    showPointer: () => showPointer(op1, 0, 3000),
-                    blockButtons: () => blockAllButtonsTemporarily(3000)
-                }
-            ],
-            4: [ // Сценарий 4. Заземление КЛ
-                {
-                    description: "Собрать исходную схему",
-                    notification: [
-                        "Шаг 1️⃣/🔟"
-                    ],
-                    operation: () => forceState(1)
-                },
-                {
-                    description: "Отключить выключатель",
-                    notification: [
-                        "Шаг 2️⃣/🔟",
-                        "Отключение выключателя",
-                        "  1. Нажмите кнопку 'O'",
-                        "  (удержите более 0,3 сек)",
-                        "  2. Убедитесь по мнемосхеме,",
-                        "  что выключатель отключен"
-                    ],
-                    operation: () => tryOperation(2),
-                    prevOperation: () => forceState(1),
-                    showPointer: () => showPointer(op2, 0, 3000),
-                    blockButtons: () => blockAllButtonsTemporarily(3000)
-                },
-                {
-                    description: "Заблокировать выключатель",
-                    notification: [
-                        "Шаг 3️⃣/🔟",
-                        "Блокирование выключателя",
-                        "  Поверните рукоятку блокировки",
-                        "  на 90° по часовой стрелке"
-                    ],
-                    operation: () => tryOperation(3),
-                    prevOperation: () => forceState(4),
-                    showArrow: () => showArrows(true)
-                },
-                {
-                    description: "Вставка рукоятки селектора",
-                    notification: [
-                        "Шаг 4️⃣/🔟",
-                        "Установка рукоятки",
-                        "  Вставьте рукоятку селектора",
-                        "  в гнездо"
-                    ],
-                    operation: () => tryOperation(6),
-                    prevOperation: () => forceState(7)
-                },
-                {
-                    description: "Перевести в положение ИЗОЛИРОВАНО",
-                    notification: [
-                        "Шаг 5️⃣/🔟",
-                        "Перевод в ИЗОЛИРОВАНО",
-                        "  Вращением рукоятки против",
-                        "  часовой стрелки переведите",
-                        "  селектор в положение",
-                        "  ИЗОЛИРОВАНО"
-                    ],
-                    operation: () => tryOperation(9),
-                    prevOperation: () => forceState(10)
-                },
-                {
-                    description: "Перевести в положение ЗАЗЕМЛЕНО",
-                    notification: [
-                        "Шаг 6️⃣/🔟",
-                        "Перевод в ЗАЗЕМЛЕНО",
-                        "  Вращением рукоятки против",
-                        "  часовой стрелки переведите",
-                        "  селектор в положение",
-                        "  ЗАЗЕМЛЕНО"
-                    ],
-                    operation: () => tryOperation(9),
-                    prevOperation: () => forceState(11)
-                },
-                {
-                    description: "Извлечь рукоятку из гнезда",
-                    notification: [
-                        "Шаг 7️⃣/🔟",
-                        "Извлечение рукоятки",
-                        "  Извлеките рукоятку селектора",
-                        "  из гнезда"
-                    ],
-                    operation: () => tryOperation(7),
-                    prevOperation: () => forceState(12)
-                },
-                {
-                    description: "Разблокировать выключатель",
-                    notification: [
-                        "Шаг 8️⃣/🔟",
-                        "Разблокирование выключателя",
-                        "  Поверните рукоятку блокировки",
-                        "  на 90° против часовой стрелки"
-                    ],
-                    operation: () => tryOperation(5),
-                    prevOperation: () => forceState(9),
-                    showArrow: () => showArrows(false)
-                },
-                {
-                    description: "Проверить отсутствие напряжения",
-                    notification: [
-                        "Шаг 9️⃣/🔟",
-                        "Проверка отсутствия U",
-                        "  Перейдите в раздел ИЗМЕРЕНИЯ",
-                        "  и проверьте отсутствие",
-                        "  напряжения на кабельной линии"
-                    ],
-                    operation: () => checkMeasurements(),
-                    prevOperation: () => forceState(6),
-                    showPointer: () => showPointer(measButton, 0, 3000),
-                    blockButtons: () => blockAllButtonsTemporarily(3000)
-                },
-                {
-                    description: "Включить выключатель",
-                    notification: [
-                        "Шаг 🔟/🔟",
-                        "Включение выключателя",
-                        "  1. Нажмите кнопку 'I'",
-                        "  (удержите более 0,3 сек)",
-                        "  2. Убедитесь по мнемосхеме,",
-                        "  что выключатель включен"
-                    ],
-                    operation: () => tryOperation(1),
-                    prevOperation: () => {
-                        forceState(6);
-                        checkMeasurements();
-                    },
-                    showPointer: () => showPointer(op1, 0, 3000),
-                    blockButtons: () => blockAllButtonsTemporarily(3000)
-                }
-            ],
-            5: [ // Сценарий 5. Ввод КЛ в работу
-                {
-                    description: "Собрать исходную схему",
-                    notification: [
-                        "Шаг 1️⃣/9️⃣"
-                    ],
-                    operation: () => forceState(3)
-                },
-                {
-                    description: "Отключить выключатель",
-                    notification: [
-                        "Шаг 2️⃣/9️⃣",
-                        "Отключение выключателя",
-                        "  1. Нажмите кнопку 'O'",
-                        "  (удержите более 0,3 сек)",
-                        "  2. Убедитесь по мнемосхеме,",
-                        "  что выключатель отключен"
-                    ],
-                    operation: () => tryOperation(2),
-                    prevOperation: () => forceState(3),
-                    showPointer: () => showPointer(op2, 0, 3000),
-                    blockButtons: () => blockAllButtonsTemporarily(3000)
-                },
-                {
-                    description: "Заблокировать выключатель",
-                    notification: [
-                        "Шаг 3️⃣/9️⃣",
-                        "Блокирование выключателя",
-                        "  Поверните рукоятку блокировки",
-                        "  на 90° по часовой стрелке"
-                    ],
-                    operation: () => tryOperation(3),
-                    prevOperation: () => forceState(6),
-                    showArrow: () => showArrows(true)
-                },
-                {
-                    description: "Вставка рукоятки селектора",
-                    notification: [
-                        "Шаг 4️⃣/9️⃣",
-                        "Установка рукоятки",
-                        "  Вставьте рукоятку селектора",
-                        "  в гнездо"
-                    ],
-                    operation: () => tryOperation(6),
-                    prevOperation: () => forceState(9)
-                },
-                {
-                    description: "Перевести в положение ИЗОЛИРОВАНО",
-                    notification: [
-                        "Шаг 5️⃣/9️⃣",
-                        "Перевод в ИЗОЛИРОВАНО",
-                        "  Вращением рукоятки по часовой",
-                        "  стрелке переведите селектор",
-                        "  в положение ИЗОЛИРОВАНО"
-                    ],
-                    operation: () => tryOperation(8),
-                    prevOperation: () => forceState(12)
-                },
-                {
-                    description: "Перевести в положение ПОДКЛЮЧЕНО",
-                    notification: [
-                        "Шаг 6️⃣/9️⃣",
-                        "Перевод в ПОДКЛЮЧЕНО",
-                        "  Вращением рукоятки по часовой",
-                        "  стрелке переведите селектор",
-                        "  в положение ПОДКЛЮЧЕНО"
-                    ],
-                    operation: () => tryOperation(8),
-                    prevOperation: () => forceState(11)
-                },
-                {
-                    description: "Извлечь рукоятку из гнезда",
-                    notification: [
-                        "Шаг 7️⃣/9️⃣",
-                        "Извлечение рукоятки",
-                        "  Извлеките рукоятку селектора",
-                        "  из гнезда"
-                    ],
-                    operation: () => tryOperation(7),
-                    prevOperation: () => forceState(10)
-                },
-                {
-                    description: "Разблокировать выключатель",
-                    notification: [
-                        "Шаг 8️⃣/9️⃣",
-                        "Разблокирование выключателя",
-                        "  Поверните рукоятку блокировки",
-                        "  на 90° против часовой стрелки"
-                    ],
-                    operation: () => tryOperation(5),
-                    prevOperation: () => forceState(7),
-                    showArrow: () => showArrows(false)
-                },
-                {
-                    description: "Включить выключатель",
-                    notification: [
-                        "Шаг 9️⃣/9️⃣",
-                        "Включение выключателя",
-                        "  1. Нажмите кнопку 'I'",
-                        "  (удержите более 0,3 сек)",
-                        "  2. Убедитесь по мнемосхеме,",
-                        "  что выключатель включен"
-                    ],
-                    operation: () => tryOperation(1),
-                    prevOperation: () => forceState(4),
-                    showPointer: () => showPointer(op1, 0, 3000),
-                    blockButtons: () => blockAllButtonsTemporarily(3000)
-                }
-            ],
-            6: [ // Сценарий 6. Включение ручным генератором
-                {
-                    description: "Собрать исходную схему",
-                    notification: [
-                        "Шаг 1️⃣/4️⃣"
-                    ],
-                    operation: () => forceState(4)
-                },
-                {
-                    description: "Подключение генератора",
-                    notification: [
-                        "Шаг 2️⃣/4️⃣",
-                        "Подключение генератора",
-                        "  Подключите вилку",
-                        "  соединительного кабеля",
-                        "  ручного генератора к розетке.",
-                        "  ⚠️ ВКЛЮЧЕНИЕ ПРОИЗВОДИТСЯ",
-                        "  С УЧАСТИЕМ ДВУХ ЧЕЛОВЕК"
-                    ],
-                    operation: () => showHiddenMangen(),
-                    prevOperation: () => hideHiddenMangen()
-                },
-                {
-                    description: "Включение выключателя",
-                    notification: [
-                        "Шаг 3️⃣/4️⃣",
-                        "Включение выключателя",
-                        " 1. Вращайте рукоятку генератора",
-                        " с частотой 2 оборота/сек",
-                        " 2. После появления информации",
-                        " на дисплее панели MMI нажмите",
-                        " кнопку 2",
-                        " 3. После появления записи",
-                        " «Драйвер восстановлен» нажмите",
-                        " кнопку «I» (удержите более 0,3 с)",
-                        " 4. Убедитесь по мнемосхеме,",
-                        " что выключатель включен"
-                    ],
-                    operation: () => spinHandleAndRestoreDriver(),
-                    prevOperation: () => tryOperation(2),
-                    showPointer: () => {
-                        showPointer(malfunButton, 7000, 2900);
-                        setTimeout(() => {
-                            showPointer(op1, 0, 3000)
-                        }, 10000);
-                    },
-                    blockButtons: () => blockAllButtonsTemporarily(13000)
-                },
-                {
-                    description: "Отключение генератора",
-                    notification: [
-                        "Шаг 4️⃣/4️⃣",
-                        "Извлечение вилки",
-                        " Извлеките вилку соединительного",
-                        " кабеля ручного генератора",
-                        " из розетки."
-                    ],
-                    operation: () => hideHiddenMangen(),
-                    prevOperation: () => {
-                        showHiddenMangen();
-                        tryOperation(2);
-                        spinHandleAndRestoreDriver();
-                    }
-                }
-            ]
-        }
-
-        // Функция перехода между состояниями согласно матрице переходов
-        function goToState(targetState) {
-
-            const opId = transitionMatrix[currentState]?.[targetState];
-
-            if (!opId) {
-                console.log(`Переход ${currentState} → ${targetState} запрещён`);
-                return;
-            }
-
-            const operation = operations[opId];
-
-            if (!operation) {
-                console.error(`Операция ${opId} не найдена`);
-                return;
-            }
-
-            console.log(`Переход ${currentState} → ${targetState}, операция ${opId}`);
-
-            operation(); // 🔥 выполняем действие
-
-            currentState = targetState;
-        }
-
-        /* Фнкция перехода между состояниями без анимации */
-        function forceState(targetState) {
-            if (targetState !== currentState) {
-                // Если целевое состояние больше 9, то рукоятка селектора должна быть в гнезде
-                // Иначе - на стенде
-                if (targetState > 9) {
-                    takeOnHandleInmediately();
-                }
-                else {
-                    takeOffHandleInmediately();
-                }
-
-                // Если целевое состояние больше 3, то отключить выключатель
-                // Иначе - включить выключатель
-                if (targetState > 3) {
-                    turnOff();
-                }
-                else {
-                    turnOn();
-                }
-
-                // Если целевое состояние больше 6, то заблокировать выключатель
-                // Иначе - разблокировать выключатель
-                if (targetState > 6) {
-                    lockBreaker();
-                }
-                else {
-                    unlockBreaker();
-                }
-
-                spinSelectorInmediately((currentState - 1) % 3 - (targetState - 1) % 3);
-
-                // Обновляем текущее состояние
-                currentState = targetState;
-
-                // Обновляем доступность кнопок
-                updateOperationButtons();
-            }
-        }
-
-
-        // Функция для получения целевого состояния по операции
-        function getTargetStateByOperation(opId) {
-            const possible = transitionMatrix[currentState];
-
-            if (!possible) return null;
-
-            for (const [target, operation] of Object.entries(possible)) {
-                if (operation === opId) {
-                    return Number(target);
-                }
-            }
-
-            return null;
-        }
-
-        // Функция для выполнения операции
-        function tryOperation(opId) {
-
-            const targetState = getTargetStateByOperation(opId);
-
-            // Раздел вращения рукоятки селектора:
-            const handleOn = document.getElementById("handleOn");
-            const handleOff = document.getElementById("handleOff");
-            handleOff.classList.add("movable");
-
-            if (!targetState) {
-                console.warn(`❌ Операция ${opId} недопустима из состояния ${currentState}`);
-                return;
-            }
-
-            const operation = operations[opId];
-
-            if (!operation) {
-                console.error(`❌ Операция ${opId} не найдена`);
-                return;
-            }
-
-            console.log(`✅ ${currentState} → ${targetState} (операция ${opId})`);
-
-            operation(); // выполняем действие
-
-            currentState = targetState;
-
-            // Если сценарий не выбран, то показываем текущее состояние и обновляем доступность кнопок
-            if (currentScenario === 0) {
-                updateNotification();
-                updateOperationButtons();
-            }
-
-
-
-        }
-
-        // Функция для выполнения сценария
-        function tryScenario(scId) {
-            console.log(`✅ Сценарий #${scId} инициирован`);
-
-            // Скрываем стрелки, если они показаны
-            hideArrows();
-
-            // Отключаем кнопку "Предыдущий шаг"
-            document.getElementById("prevStep").style.pointerEvents = "none";
-            document.getElementById("prevStep").classList.add("operation-blocked");
-            currentStep = 1;
-            currentScenario = scId;
-
-            hideHiddenMangen(); // скрыть шнур ручного генератора
-            setTextMMI("", [""], "", true); // очистить надписи и линии на дисплее MMI
-
-
-            showNavButtons();
-
-            switch (scId) {
-                case 1: // Отключение выключателя
-                    stepCount = 2;
-                    setTextScenario(`ОТКЛЮЧЕНИЕ ВЫКЛЮЧАТЕЛЯ`);
-                    forceState((currentState - 1) % 3 + 1);
-                    break;
-
-                case 2: // Аварийное отключение выключателя
-                    stepCount = 2;
-                    setTextScenario("АВАРИЙНОЕ ОТКЛЮЧЕНИЕ");
-                    forceState((currentState - 1) % 3 + 1);
-                    break;
-
-                case 3: // Включение выключателя
-                    stepCount = 4;
-                    setTextScenario("ВКЛЮЧЕНИЕ ВЫКЛЮЧАТЕЛЯ");
-                    if (currentState <= 3) {
-                        forceState(currentState + 3);
-                    }
-                    break;
-
-                case 4: // Заземление кабельной линии
-                    stepCount = 10;
-                    setTextScenario("ЗАЗЕМЛЕНИЕ КЛ");
-
-                    // 1. Перевести схему в состояние 1
-                    forceState(1);
-                    break;
-
-                case 5: // Ввод кабельной линии в работу
-                    stepCount = 9;
-                    setTextScenario("ВВОД КЛ В РАБОТУ");
-
-                    // 1. Перевести схему в состояние 3
-                    forceState(3);
-                    break;
-
-                case 6: // Включение ручным генератором
-                    stepCount = 4;
-                    setTextScenario("РУЧНОЕ ВКЛЮЧЕНИЕ");
-                    // 1. Перевести схему в состояние 4
-                    forceState(4);
-                    break;
-
-                default:
-                    console.warn(`⚠️ Неизвестный сценарий #${scId}`);
-            }
-
-            showScenarioBack();
-
-            updateNotification();
-            setScenarioNotification([scenarios[currentScenario][currentStep - 1].notification, "Исходная схема:", ...states[currentState].info]);
-
-            // Блокируем кнопки операций
-            blockOperationButtons();
-            updateNavButtons();
-        }
-
-        function setTextScenario(text) {
-            const el1 = document.getElementById("textScenarioH1");
-            const el2 = document.getElementById("textScenarioH2");
-            const commandText = document.getElementById("commandH1");
-            if (el2) {
-                el2.textContent = text;
-            } else {
-                console.warn("⚠️ Элемент #textScenario не найден");
-            }
-            if (text == "") {
-                el1.textContent = text;
-                commandText.textContent = "КОМАНДЫ";
-            } else {
-                el1.textContent = "СЦЕНАРИЙ";
-                commandText.textContent = "";
-            }
-        }
-
-        // Функция для установки текста на панель MMI
-        // Функция для установки текста на панель MMI
-        function setTextMMI(firstline, lines, date, hideLines) {
-            // Устанавливаем первую строку
-            const elFirst = document.getElementById("mmi-display-first-line-text");
-            if (elFirst) {
-                elFirst.textContent = firstline || "";
-                elFirst.setAttribute("xml:space", "preserve"); // Чтобы пробелы не схлопывались в один
-            }
-
-            // Устанавливаем многострочный текст
-            const elLines = document.getElementById("mmi-display-text");
-            if (elLines) {
-                elLines.setAttribute("xml:space", "preserve"); // Чтобы пробелы не схлопывались в один
-
-                // Очищаем старый текст (важно: удаляем все дочерние <tspan>, если они есть)
-                while (elLines.firstChild) elLines.removeChild(elLines.firstChild);
-
-                // Добавляем новые строки через <tspan>
-                lines.forEach((line, i) => {
-                    const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                    tspan.setAttribute("x", "55");
-                    tspan.setAttribute("dy", i === 0 ? "0" : "1.2em");
-                    tspan.textContent = line || "";
-                    tspan.setAttribute("xml:space", "preserve"); // Чтобы пробелы не схлопывались в один
-                    elLines.appendChild(tspan);
-                });
-            }
-
-            // Устанавливаем дату/время
-            const elDate = document.getElementById("mmi-display-date");
-            if (elDate) elDate.textContent = date || "";
-
-            // Убедимся, что элементы видимы
-            [elFirst, elLines, elDate].forEach(el => {
-                if (el) el.style.opacity = "1";
+        // Закрыть все всплывающие панели
+        function closeAllDrawers() {
+            document.querySelectorAll('.menu-drawer').forEach(drawer => {
+                drawer.classList.remove('open');
             });
+        }
 
-            const mmiLines = document.getElementById("mmi-line");
+        // Открыть выбранную панель (с возможностью свернуть при повторном клике)
+        function openDrawer(drawerId) {
+            const targetDrawer = document.getElementById(drawerId);
+            if (!targetDrawer) return;
 
-            if (mmiLines) {
-                if (hideLines) {
-                    mmiLines.style.display = "none";
-                }
-                else {
-                    mmiLines.style.display = "inline";
-                }
+            const isOpen = targetDrawer.classList.contains('open');
 
-            } else {
-                console.warn("⚠️ Элемент #mmi-lines не найден");
+            // Сначала закрываем любую открытую панель
+            closeAllDrawers();
+
+            // Если панель была закрыта — открываем её
+            if (!isOpen) {
+                targetDrawer.classList.add('open');
             }
         }
 
-        // Функция для задания текста в поле описания состояния схемы
-        function updateNotification() {
-            const el = document.getElementById("notification");
-            const lines = ["Текущее состояние схемы:", ...states[currentState].info];
-
-            // Очищаем старый текст
-            el.textContent = "";
-
-            // Добавляем новые строки через <tspan>
-            lines.forEach((line, i) => {
-                const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                tspan.setAttribute("x", "30");
-                tspan.setAttribute("dy", i === 0 ? "0" : "1.2em");
-                tspan.textContent = line;
-                el.appendChild(tspan);
-            });
-
-            // Обнуляем opacity, чтобы уведомление не светилось (если оно было скрыто)
-            el.style.opacity = "1";
-        }
-
-        // Функция для задания текста в поле описания операций сценария
-        function setScenarioNotification(lines) {
-            const el = document.getElementById("scenarioNotification");
-
-            // Очищаем старый текст
-            el.textContent = "";
-
-            // Добавляем новые строки через <tspan>
-            lines.forEach((line, i) => {
-                const tspan = document.createElementNS("http://www.w3.org/2000/svg", "tspan");
-                tspan.setAttribute("x", "530");
-                tspan.setAttribute("dy", i === 0 ? "0" : "1.2em");
-                tspan.textContent = line;
-                el.appendChild(tspan);
-            });
-
-            // Обнуляем opacity, чтобы уведомление не светилось (если оно было скрыто)
-            el.style.opacity = "1";
-        }
-
-
-
-
-        // (1) Включить выключатель
-        function turnOn() {
-            // Изменить состояние светодиодных индикаторов
-            indicatorOn.setAttribute("fill", "#f00");
-            indicatorOff.setAttribute("fill", "#fff");
-
-            // Изменить состояние механического индикатора на "Включено"
-            switchLine.setAttribute("x2", "270");
-            switchLine.setAttribute("y2", "250");
-
-        }
-
-        // (2) Отключить выключатель
-        function turnOff() {
-            // Изменить состояние светодиодных индикаторов
-            indicatorOn.setAttribute("fill", "#fff");
-            indicatorOff.setAttribute("fill", "#f00");
-
-            // Изменить состояние механического индикатора на "Отключено"
-            switchLine.setAttribute("x2", "282");
-            switchLine.setAttribute("y2", "258");
-            // spin(false);
-        }
-
-        // (3) Отключить и заблокировать выключатель
-        function turnOffAndlockBreaker() {
-            blockHandle.setAttribute(
-                "transform",
-                `rotate(0 400 720)`
-            );
-            turnOff(); // Одновременно с поворотом рукоятки отключается выключатель
-            document.getElementById("hexBolt").setAttribute("display", "inline");
-        }
-
-        // (4) Заблокировать выключатель
-        function lockBreaker() {
-            blockHandle.setAttribute(
-                "transform",
-                `rotate(0 400 720)`
-            );
-            document.getElementById("hexBolt").setAttribute("display", "inline");
-        }
-
-        // (5) Разблокировать выключатель
-        function unlockBreaker() {
-            blockHandle.setAttribute(
-                "transform",
-                `rotate(270 400 720)`
-            );
-            document.getElementById("hexBolt").setAttribute("display", "none");
-        }
-
-        // (6) Взять рукоятку селектора (переместить со стенда в разъем)
-        function takeOnHandle() {
-
-            blockAllButtonsTemporarily(800);
-
-            const handleOff = document.getElementById("handleOff");
-            const handleOn = document.getElementById("handleOn");
-
-            /* Блокируем кнопки
-            document.getElementById("commandPanel").style.pointerEvents = "none";
-            document.getElementById("scenarioPanel").style.pointerEvents = "none";
-            */
-
-            // Добавляем анимацию
-            handleOff.classList.add("movable");
-            handleOff.style.transition = "transform 0.8s ease-in-out";
-
-            // Двигаем к разъему (330, 260)
-            moveTo(handleOff, -442, 105);
-            // ⚠️ важно: это относительное смещение!
-            // 310 → 330 ( +20 )
-            // 452 → 260 ( -192 )
-
-            // После анимации
-            setTimeout(() => {
-                handleOff.setAttribute("display", "none");
-                handleOn.setAttribute("display", "inline");
-
-                // document.getElementById("commandPanel").style.pointerEvents = "auto";
-                // document.getElementById("scenarioPanel").style.pointerEvents = "auto";
-            }, 800);
-        }
-
-        // (7) Убрать рукоятку селектора (переместить из разъема на стенд)
-        function takeOffHandle() {
-
-            blockAllButtonsTemporarily(800);
-
-            const handleOff = document.getElementById("handleOff");
-            const handleOn = document.getElementById("handleOn");
-
-            /* Блокируем кнопки
-            document.getElementById("commandPanel").style.pointerEvents = "none";
-            document.getElementById("scenarioPanel").style.pointerEvents = "none";
-            */
-
-            // Показываем переносимую рукоятку
-            handleOff.setAttribute("display", "inline");
-
-            // 2. Добавляем класс .movable для анимации
-            handleOff.classList.add("movable");
-
-            // 3. Добавляем transition (если нужно ускорить/замедлить)
-            handleOff.style.transition = "transform 0.8s ease-in-out";
-
-            // Сначала ставим в позицию разъема
-            moveTo(handleOff, -442, 105);
-
-            // Даём браузеру применить позицию
-            setTimeout(() => {
-                // Двигаем обратно на стенд
-                moveTo(handleOff, 0, 0);
-
-                // Скрываем вставленную рукоятку
-                handleOn.setAttribute("display", "none");
-            }, 50);
-
-            // Разблокировка после анимации
-            setTimeout(() => {
-                document.getElementById("commandPanel").style.pointerEvents = "auto";
-                document.getElementById("scenarioPanel").style.pointerEvents = "auto";
-            }, 850);
-        }
-
-        // Вспомогательная функция перемещения рукоятки
-        function moveTo(element, x, y) {
-            element.setAttribute("transform", `translate(${x} ${y})`);
-            console.log('Вызван метод moveTo');
-        }
-
-        function takeOnHandleInmediately() {
-            const handleOff = document.getElementById("handleOff");
-            const handleOn = document.getElementById("handleOn");
-
-            // 1. Убираем класс .movable (если он был добавлен где-то ранее)
-            handleOff.classList.remove("movable");
-
-            // 2. Убираем transition
-            handleOff.style.transition = "none";
-
-            // 3. Форсируем применение стилей (чтобы transition: none сработал)
-            void handleOff.offsetWidth;
-
-            // 4. Устанавливаем координаты разъема (198, 424)
-            // handleOff по умолчанию находится в позиции (310, 520)
-            // нужно сдвинуть на (-112, -96): 310-112=198, 520-96=424
-            handleOff.setAttribute("transform", "translate(-462, 105)");
-
-            // 5. Показываем handleOn
-            handleOn.setAttribute("display", "inline");
-
-            // 6. Скрываем handleOff
-            handleOff.setAttribute("display", "none");
-        }
-
-        // Убрать рукоятку селектора (вспомогательная функция для перехода к состоянию 1 или 3)
-        function takeOffHandleInmediately() {
-            const handleOff = document.getElementById("handleOff");
-            const handleOn = document.getElementById("handleOn");
-
-            // 1. Убираем класс .movable, чтобы не было анимации
-            handleOff.classList.remove("movable");
-
-            // 2. Убираем transition
-            handleOff.style.transition = "none";
-
-            // 3. Форсируем применение стилей (чтобы transition: none сработал)
-            void handleOff.offsetWidth;
-
-            // 4. Показываем handleOff
-            handleOff.setAttribute("display", "inline");
-
-            // 5. Скрываем handleOn
-            handleOn.setAttribute("display", "none");
-
-            // 6. Устанавливаем координаты (0, 0) без анимации
-            handleOff.setAttribute("transform", "translate(0 0)");
-        }
-
-
-        // (8) Повернуть селектор по часовой стрелке
-        function selectorToRight() {
-            spinCW();
-        }
-
-        // (9) Повернуть селектор против часовой стрелки
-        function selectorToLeft() {
-            spinCCW();
-        }
-
-
-
-        function spinCW() {
-            spin(true);
-        }
-
-        function spinCCW() {
-            spin(false);
-        }
-
-
-
-        function spin(isRight) {
-
-            blockAllButtonsTemporarily(3000);
-
-            /*
-            document.getElementById("navPanel").style.pointerEvents = "none";
-            document.getElementById("commandPanel").style.pointerEvents = "none";
-            document.getElementById("scenarioPanel").style.pointerEvents = "none";
-            */
-
-            const handle = document.getElementById("handleOn");
-            const selector = document.getElementById("selector_pos");
-
-            const dir = isRight ? 1 : -1;
-
-            // --- СЕЛЕКТОР ---
-            let newSelectorAngle = selectorAngle + 90 * dir;
-
-            if (newSelectorAngle < -90 || newSelectorAngle > 90) {
-                console.log("Достигнут предел положения селектора");
-                document.getElementById("commandPanel").style.pointerEvents = "auto";
-                return;
-            }
-
-            selectorAngle = newSelectorAngle;
-
-            // --- РУКОЯТКА ---
-            handle.currentAngle = (handle.currentAngle || 0) + 5400 * dir;
-
-            // ❗ ВАЖНО: задаем центр вращения через CSS
-            handle.style.transformOrigin = "330px 800px";
-            selector.style.transformOrigin = "150px 300px";
-
-            // Анимация
-            handle.style.transition = "transform 3s ease-in-out";
-            selector.style.transition = "transform 3s ease-in-out";
-
-            // ❗ Используем CSS transform
-            handle.style.transform = `rotate(${handle.currentAngle}deg)`;
-            selector.style.transform = `rotate(${selectorAngle}deg)`;
-
-            /*
-            setTimeout(() => {
-                document.getElementById("navPanel").style.pointerEvents = "auto";
-                document.getElementById("commandPanel").style.pointerEvents = "auto";
-                document.getElementById("scenarioPanel").style.pointerEvents = "auto";
-            }, 3000);
-            */
-        }
-
-        /*
-         * Функция для перевода селектора в новое положение без анимации.
-         * Селектор поворачивается на угол, равный 90° * input.
-         * input может принимать значения от -2 до 2
-         */
-        function spinSelectorInmediately(input) {
-
-            const selector = document.getElementById("selector_pos");
-
-            // Вычисляем новый угол
-            const delta = 90 * input;
-
-            // Устанавливаем центр вращения
-            selector.style.transformOrigin = "150px 300px";
-
-            // Отключаем анимацию
-            selector.style.transition = "none";
-
-            // Форсируем применение стилей
-            void selector.offsetWidth;
-
-            // Обновляем глобальный угол
-            selectorAngle = (selectorAngle || 0) + delta;
-
-            // Применяем поворот
-            selector.style.transform = `rotate(${selectorAngle}deg)`;
-        }
-
-        /* Функция для вращения рукоятки ручного генератора */
-        function spinHandleMangen(duration = 5000, totalRotation = 360) {
-            const handleMangen = document.getElementById("handleMangen");
-
-            // Устанавливаем точку вращения через CSS (центр верхнего круга)
-            handleMangen.style.transformOrigin = "570px 680px";
-
-            // Отключаем анимацию перед стартом (чтобы начать с нуля)
-            handleMangen.style.transition = `transform ${duration}ms linear`;
-
-            // Форсируем применение стилей (чтобы transition сработал корректно)
-            void handleMangen.offsetWidth;
-
-            // Вычисляем текущий угол (если есть), чтобы продолжить вращение
-            handleMangen.currentAngle = (handleMangen.currentAngle || 0) + totalRotation;
-
-            // Применяем вращение
-            handleMangen.style.transform = `rotate(${handleMangen.currentAngle}deg)`;
-
-            console.log(`Вращение рукоятки ручного генератора: ${totalRotation}° за ${duration} мс`);
-        }
-
-        function spinHandleAndRestoreDriver() {
-            // 0. Блокируем все кнопки
-            // blockAllButtonsTemporarily(13000);
-
-            // 1. Запускаем вращение ручки генератора
-            spinHandleMangen(10000, 7200);
-
-            // Логируем запуск
-            console.log("✅ Вращение ручки генератора началось");
-
-            // 2. Через 5 секунд (5000 мс) показываем "Wait"
-            setTimeout(() => {
-                setTextMMI("", [""], "⌛ Wait", true);
-                console.log("⏳ Показано: Wait");
-
-                // 3. Через ещё 2 секунды (итого 7 сек от начала) — "Драйвер восстановлен"
-                setTimeout(() => {
-                    checkMeasurements();
-
-                    setTimeout(() => {
-
-                        setTextMMI("Нажмите Неиспр. для квитир.", ["", "   Внешнее питание отсутствует", ">   Внешнее питание восстановлено", "Конец журнала"], getCurrentDateTime(), false);
-                        console.log("✅ Показано: Драйвер восстановлен");
-
-
-                        // 4. Через ещё 2 секунды (итого 9 сек от начала) — вызываем turnOn()
-                        setTimeout(() => {
-                            setTextMMI("Нажмите Неиспр. для квитир.", ["   Внешнее питание отсутствует", "   Внешнее питание восстановлено", "   > Драйвер восстановлен", "Конец журнала"], getCurrentDateTime(), false);
-                            tryOperation(1);
-                            updateNotification();
-                            console.log("⚡ Вызван tryOperation(1) — выключатель будет включён");
-                        }, 3000);
-                    }, 2000);
-                }, 2000);
-            }, 3000);
-        }
-
-        function checkMeasurements() {
-            setTextMMI("Токи и напряжения", ["Ua, кВ                        0.00                                        Ia, А                      0.0",
-                "Ub, кВ                        0.00                                        Ib, А                      0.0",
-                "Uc, кВ                        0.00                                        Ic, А                      0.0",
-                "U1, кВ                        0.00                                        3I0, А                  0.00"],
-                getCurrentDateTime(), false);
-
-            // 0. Блокируем все кнопки
-            //blockAllButtonsTemporarily(5000);
-
-
-
-            //setTimeout(() => {
-            //console.log("Ждем 5 секунд");
-            //}, 3000);
-
-        }
-
-
-        // Скрыть элемент hiddenMangen
-        function hideHiddenMangen() {
-            const el = document.getElementById("hiddenMangen");
-            if (el) {
-                el.style.display = "none";
-            } else {
-                console.warn("⚠️ Элемент #hiddenMangen не найден");
-            }
-        }
-
-        // Показать элемент hiddenMangen
-        function showHiddenMangen() {
-            const el = document.getElementById("hiddenMangen");
-            if (el) {
-                el.style.display = "inline"; // или "block", но для <g> лучше "inline" или "inline-block"
-            } else {
-                console.warn("⚠️ Элемент #hiddenMangen не найден");
-            }
-        }
-
-        /* Функция скрытия тестовых кнопок */
-        function hideTestButtons() {
-            document.getElementById("testPanel").style.display = "none";
-        }
-
-        /* Скрываем стрелки */
-        function hideArrows() {
-            const arrowCW = document.getElementById("arrowCW");
-            const arrowCCW = document.getElementById("arrowCCW");
-
-            if (arrowCW) arrowCW.style.display = "none";
-            if (arrowCCW) arrowCCW.style.display = "none";
-        }
-
-        /* Показать стрелку */
-        function showArrows(isClockwise) {
-            const arrowCW = document.getElementById("arrowCW");
-            const arrowCCW = document.getElementById("arrowCCW");
-
-            if (isClockwise && arrowCW) arrowCW.style.display = "inline";
-            if (!isClockwise && arrowCCW) arrowCCW.style.display = "inline";
-        }
-
-        /* Скрываем стрелки */
-        function hideScenarioBack() {
-            const el = document.getElementById("scenarioBack");
-
-            if (el) el.style.display = "none";
-        }
-
-        function showScenarioBack() {
-            const el = document.getElementById("scenarioBack");
-
-            if (el) el.style.display = "inline";
-        }
-
-
-
-        function showPointer(target, delay = 0, duration = 3000) {
-
-            const pointer = document.getElementById("pointer");
-            if (!pointer) {
-                console.warn("⚠️ Элемент #pointer не найден");
-                return;
-            }
-
-            // Сбросим предыдущий таймер
-            if (pointer.clearTimeoutId) {
-                clearTimeout(pointer.clearTimeoutId);
-            }
-
-            let x, y;
-
-            if (typeof target === "object" && target.tagName) { // элемент DOM/SVG
-                const center = getElementCenter(target);
-                if (!center) {
-                    console.error("❌ Не удалось вычислить центр элемента:", target);
-                    return;
-                }
-                x = center.x;
-                y = center.y;
-            } else if (typeof target === "number") { // координаты
-                x = target;
-                y = duration;
-                duration = arguments.length === 3 ? arguments[2] : 3000;
-            } else {
-                console.error("❌ Неверный тип target в showPointer():", typeof target);
-                return;
-            }
-
-            // ❗ ВАЖНО: добавляем таймер на задержку
-            pointer.clearTimeoutId = setTimeout(() => {
-                // 1. Переместить указатель
-                pointer.setAttribute("transform", `translate(${x}, ${y})`);
-                // 2. Показать
-                pointer.style.opacity = "1";
-                // 3. Заблокировать все кнопки на 3 секунды
-                //blockAllButtonsTemporarily(duration);
-
-                // 3. Скрыть через duration
-                setTimeout(() => {
-                    pointer.setAttribute("transform", "translate(-1000, -1000)");
-                    pointer.style.opacity = "0";
-                    pointer.clearTimeoutId = null;
-                }, duration);
-            }, delay);
-        }
-
-        function showPointerTwoTarget(target1, delay1, duration1, target2, delay2, duration2) {
-            showPointer(target1, delay1, duration1);
-            showPointer(target2, delay2, duration2);
-        }
-
-        /* Функция скрытия кнопок навигации 
-        Должна вызываться при завершении сценария
-        */
-        function hideNavButtons() {
-            document.getElementById("btnPrev").style.display = "none";
-            document.getElementById("btnNext").style.display = "none";
-            document.getElementById("btnFinish").style.display = "none";
-        }
-
-        /* Функция показа кнопок навигации
-        Должна вызываться при начале сценария (в функции tryScenario())
-        */
-        function showNavButtons() {
-            document.getElementById("btnPrev").style.display = "inline";
-            document.getElementById("btnNext").style.display = "inline";
-            document.getElementById("btnFinish").style.display = "inline";
-        }
-
-        function navPrev() {
-            hideArrows();
-            setTextMMI("", [""], "", true); // скрыть текст и линии на панели MMI
-
-            currentStep--;
-            console.log(`Шаг ${currentStep} / ${stepCount}`);
-
-
-            if (currentStep == 1) {
-                setScenarioNotification([scenarios[currentScenario][currentStep - 1].notification, "Исходная схема:", ...states[currentState].info]);
-            }
-            else {
-                setScenarioNotification(scenarios[currentScenario][currentStep - 1].notification);
-            }
-
-            updateNavButtons();
-
-            runOperation(scenarios[currentScenario][currentStep].prevOperation);
-            runShowPointer(scenarios[currentScenario][currentStep - 1].showPointer);
-            runBlockButtons(scenarios[currentScenario][currentStep - 1].blockButtons);
-            runShowArrows(scenarios[currentScenario][currentStep - 1].showArrow);
-
-            blockOperationButtons();
-            updateNotification();
-        }
-
-        function navNext() {
-            hideArrows();
-            setTextMMI("", [""], "", true); // скрыть текст и линии на панели MMI
-
-            currentStep++;
-            console.log(`Шаг ${currentStep} / ${stepCount}`);
-            setScenarioNotification(scenarios[currentScenario][currentStep - 1].notification);
-            blockOperationButtons();
-            updateNavButtons();
-            runOperation(scenarios[currentScenario][currentStep - 1].operation);
-            runShowPointer(scenarios[currentScenario][currentStep - 1].showPointer);
-            runBlockButtons(scenarios[currentScenario][currentStep - 1].blockButtons);
-            runShowArrows(scenarios[currentScenario][currentStep - 1].showArrow);
-            updateNotification();
-        }
-
-
-        function navFinish() {
-            hideArrows();
-            deblockOperationButtons(); // Разблокируем кнопки операций
-            updateOperationButtons(); // Обновляем доступность кнопок в соответствии с матрицей переходов
-            hideNavButtons(); // Скрываем кнопки навигации
-            setTextScenario("");
-            setScenarioNotification([``]); // Скрываем уведомление
-
-            currentStep = 0;
-            stepCount = 0;
-            currentScenario = 0;
-
-            hideHiddenMangen(); // Скрываем рукоятку генератора
-            setTextMMI("", [""], "", true); // скрыть текст и линии на панели MMI
-
-            hideScenarioBack();
-
-            updateNotification();
-        }
-
-        /* Функция блокировки всех кнопок операций.
-        Предназначена для блокировки кнопок, когда
-        активен какой-либо сценарий */
-        function blockOperationButtons() {
-            for (let opId = 1; opId <= 9; opId++) {
-
-                const btn = document.getElementById(`op${opId}`);
-
-                if (!btn)
-                    continue;
-                if (opId < 3) {
-                    btn.classList.remove(
-                        "operation-allowed",
-                        "operation-blocked"
-                    );
-                    btn.classList.add("operation-blocked-without-visual");
-                }
-                else {
-                    btn.classList.remove(
-                        "operation-allowed",
-                        "operation-blocked"
-                    );
-                    btn.classList.add("operation-blocked");
-                }
-            }
-        }
-
-        /* Функция разблокировки всех кнопок операций.
-        Предназначена для разблокировки кнопок, когда
-        завершается сценарий */
-        function deblockOperationButtons() {
-            for (let opId = 1; opId <= 9; opId++) {
-
-                const btn = document.getElementById(`op${opId}`);
-
-                if (!btn)
-                    continue;
-
-                btn.classList.remove(
-                    "operation-blocked",
-                    "operation-blocked-without-visual"
-                );
-            }
-        }
-
-        function runOperation(operation) {
-            if (typeof operation === "function") {
-                operation();
-            } else if (operation !== null && operation !== undefined) {
-                console.warn("⚠️ operation не является функцией:", operation);
-            }
-        }
-
-        function runShowPointer(operation) {
-            if (typeof operation === "function") {
-                operation();
-            } else if (operation !== null && operation !== undefined) {
-                console.warn("⚠️ showPointer не является функцией:", operation);
-            }
-        }
-
-        function runBlockButtons(operation) {
-            if (typeof operation === "function") {
-                operation();
-            } else if (operation !== null && operation !== undefined) {
-                console.warn("⚠️ showPointer не является функцией:", operation);
-            }
-        }
-
-        function runShowArrows(operation) {
-            if (typeof operation === "function") {
-                operation();
-            } else if (operation !== null && operation !== undefined) {
-                console.warn("⚠️ showPointer не является функцией:", operation);
-            }
-        }
-
-        /* Функция обновления доступности кнопок навигации */
-        function updateNavButtons() {
-            document.getElementById("prevStep").style.pointerEvents = "auto";
-            document.getElementById("prevStep").classList.remove("operation-blocked");
-            document.getElementById("nextStep").style.pointerEvents = "auto";
-            document.getElementById("nextStep").classList.remove("operation-blocked");
-            if (currentStep == 1) {
-                document.getElementById("prevStep").style.pointerEvents = "none";
-                document.getElementById("prevStep").classList.add("operation-blocked");
-            }
-            if (currentStep == stepCount && currentStep != 0) {
-                document.getElementById("nextStep").style.pointerEvents = "none";
-                document.getElementById("nextStep").classList.add("operation-blocked");
-            }
-        }
-
-        /* Функция обновления доступности кнопок операций
-         * Если операция доступна в текущем состоянии (по матрице переходов)
-         * то кнопка становится доступной, иначе — заблокированной */
-        function updateOperationButtons() {
-
-            console.log("Текущее состояние:", currentState);
-
-            // Сбрасываем все кнопки
-            for (let opId = 3; opId <= 9; opId++) {
-
-                const btn = document.getElementById(`op${opId}`);
-
-                if (!btn)
-                    continue;
-
-                btn.classList.remove(
-                    "operation-allowed",
-                    "operation-blocked"
-                );
-
-                const targetState = getTargetStateByOperation(opId);
-
-                if (targetState) {
-                    btn.classList.add("operation-allowed");
-                }
-                else {
-                    btn.classList.add("operation-blocked");
-                }
-            }
-        }
-
-        /**
-         * Блокирует все кнопки на заданное время и восстанавливает их исходное состояние
-         * @param {number} duration — время блокировки в миллисекундах (например, 2000 = 2 сек)
-         */
-        function blockAllButtonsTemporarily(duration = 10000) {
-
-            if (duration == 0) return;
-
-            // 1. Блокируем панели (как и раньше)
-            const panels = ["commandPanel", "scenarioPanel", "navPanel", "mmiPanel"];
-            panels.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.pointerEvents = "none";
-            });
-
-            // 2. Блокируем кнопки навигации (только prevStep и nextStep)
-            const navButtons = ["prevStep", "nextStep"];
-            const savedNavPointerEvents = {};
-
-            navButtons.forEach(id => {
-                const btn = document.getElementById(id);
-                if (btn) {
-                    // Сохраняем исходное состояние
-                    savedNavPointerEvents[id] = btn.style.pointerEvents;
-                    // Блокируем явно (чтобы переопределить родительский pointer-events: none)
-                    btn.style.pointerEvents = "none";
-                }
-            });
-
-            console.log(`⚡ Заблокировано панели и кнопки: ${navButtons.join(", ")}`);
-
-            // 3. Разблокировка через duration
-            setTimeout(() => {
-                // Разблокируем панели
-                panels.forEach(id => {
-                    const el = document.getElementById(id);
-                    if (el) el.style.pointerEvents = "auto";
-                });
-
-                // Восстанавливаем исходное состояние кнопок prevStep и nextStep
-                navButtons.forEach(id => {
-                    const btn = document.getElementById(id);
-                    if (btn) {
-                        const saved = savedNavPointerEvents[id];
-                        btn.style.pointerEvents = saved || "auto"; // восстанавливаем
-                    }
-                });
-
-                console.log(`✅ Разблокировано (${duration} мс)`);
-            }, duration);
-        }
-
-        // Возвращает объект {x, y} — координаты центра SVG-элемента (в локальной системе координат SVG)
-        function getElementCenter(element) {
-            if (!element) return null;
-
-            // Попытка 1: использовать getBBox() — работает для <rect>, <circle>, <g> и т.д.
-            try {
-                const bbox = element.getBBox();
-                return {
-                    x: bbox.x + bbox.width / 2,
-                    y: bbox.y + bbox.height / 2
-                };
-            } catch (e) {
-                console.warn("⚠️ getBBox() не поддерживается или элемент невидимый:", element);
-            }
-
-            // Попытка 2: для <g> с <rect> внутри — попробуем найти первый <rect>
-            const rect = element.querySelector("rect");
-            if (rect) {
-                const rectBBox = rect.getBBox();
-                return {
-                    x: rectBBox.x + rectBBox.width / 2,
-                    y: rectBBox.y + rectBBox.height / 2
-                };
-            }
-
-            return { x: 0, y: 0 }; // fallback
-        }
-
-        function getCurrentDateTime() {
-            const now = new Date();
-
-            // Массив с сокращенными названиями месяцев на русском
-            const months = [
-                'Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн',
-                'Июл', 'Авг', 'Сен', 'Окт', 'Ноя', 'Дек'
-            ];
-
-            // Получаем компоненты даты
-            const month = months[now.getMonth()];
-            const day = String(now.getDate()).padStart(2, '0');
-            const year = now.getFullYear();
-
-            // Получаем компоненты времени
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-
-            // Собираем строку в нужном формате
-            return `${month}/${day}/${year} ${hours}:${minutes}:${seconds}.${milliseconds}`;
-        }
-
-        hideTestButtons();
-        hideArrows();
-        updateOperationButtons();
-        hideHiddenMangen();
-        hideScenarioBack();
-        setTextMMI("", [""], "", true);
-        updateNotification();
+        // Навешиваем клики на нижние кнопки навигации
+        document.getElementById('btnTabScenarios').addEventListener('click', () => {
+            openDrawer('drawerScenarios');
+        });
+
+        document.getElementById('btnTabControl').addEventListener('click', () => {
+            openDrawer('drawerControl');
+        });
+
+        document.getElementById('btnTabLocks').addEventListener('click', () => {
+            openDrawer('drawerLocks');
+        });
+
+        // Навешиваем закрытие на все кнопки "Скрыть"
+        document.querySelectorAll('.drawer-btn-close').forEach(btn => {
+            btn.addEventListener('click', closeAllDrawers);
+        });
     </script>
 </body>
 
